@@ -5,6 +5,9 @@ from rest_framework import viewsets
 from .models import Customer, EMI
 from .serializers import CustomerSerializer, EMISerializer
 from django.http import JsonResponse
+from .models import Payment
+from .serializers import PaymentSerializer
+from rest_framework import viewsets
 
 def ping(request):
     return JsonResponse({"message": "pong"})
@@ -17,3 +20,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
 class EMIViewSet(viewsets.ModelViewSet):
     queryset = EMI.objects.all()
     serializer_class = EMISerializer
+
+class PaymentViewSet(viewsets.ModelViewSet):
+    queryset = Payment.objects.all()
+    serializer_class = PaymentSerializer

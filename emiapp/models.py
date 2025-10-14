@@ -20,3 +20,9 @@ class EMI(models.Model):
 
     def __str__(self):
         return f"EMI for {self.customer.name}"
+
+# models.py
+class Payment(models.Model):
+    emi = models.ForeignKey(EMI, on_delete=models.CASCADE, related_name="payments")
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    paid_on = models.DateField(auto_now_add=True)
