@@ -4,6 +4,11 @@ from django.shortcuts import render
 from rest_framework import viewsets
 from .models import Customer, EMI
 from .serializers import CustomerSerializer, EMISerializer
+from django.http import JsonResponse
+
+def ping(request):
+    return JsonResponse({"message": "pong"})
+
 
 class CustomerViewSet(viewsets.ModelViewSet):
     queryset = Customer.objects.all()
