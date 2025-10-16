@@ -1,58 +1,51 @@
-from django.http import JsonResponse
-from rest_framework import viewsets, generics, permissions
-from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework import serializers
 from .models import Customer, EMI, Payment, UserProfile
-from .serializers import (
-    CustomerSerializer,
-    EMISerializer,
-    PaymentSerializer,
-    SignUpSerializer,
-    UserProfileSerializer,
-)
-
-# ---------------- PING TEST ----------------
-def ping(request):
-    return JsonResponse({"message": "pong"})
+from django.contrib.auth.models import User
 
 # ---------------- SIGNUP ----------------
-class SignUpView(generics.CreateAPIView):
-    serializer_class = SignUpSerializer
-    permission_classes = [permissions.AllowAny]
+class SignUpSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'email', 'password')
+        extra_kwargs = {'password': {'write_only': True}}
 
-# ---------------- LOGIN ----------------
-class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    def validate(self, attrs):
-        data = super().validate(attrs)
-        data["username"] = self.user.username
-        data["email"] = self.user.email
-        return data
-
-class LoginView(TokenObtainPairView):
-    serializer_class = CustomTokenObtainPairSerializer
+    def create(self, validated_data):
+        user = User.objects.create_user(**validated_data)
+        return user
 
 # ---------------- USER PROFILE ----------------
-class UserProfileViewSet(viewsets.ModelViewSet):
-    serializer_class = UserProfileSerializer
-    permission_classes = [permissions.IsAuthenticated]
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = "__all__"
 
-    def get_queryset(self):
-        return UserProfile.objects.filter(user=self.request.user)
+# ---------------- EMISerializer ----------------
+class EMISerializer(serializers.ModelSerializer):
+    customer_name = serializers.CharField(source='customer.name', read_only=True)
 
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+    class Meta:
+        model = EMI
+        fields = '__all__'
 
-# ---------------- CUSTOMERS ----------------
-class CustomerViewSet(viewsets.ModelViewSet):
-    queryset = Customer.objects.all()
-    serializer_class = CustomerSerializer
+# ---------------- CustomerSerializer ----------------
+class CustomerSerializer(serializers.ModelSerializer):
+    emis = serializers.SerializerMethodField()  # custom field to filter EMIs
 
-# ---------------- EMIs ----------------
-class EMIViewSet(viewsets.ModelViewSet):
-    queryset = EMI.objects.all()
-    serializer_class = EMISerializer
+    class Meta:
+        model = Customer
+        fields = '__all__'
 
-# ---------------- PAYMENTS ----------------
-class PaymentViewSet(viewsets.ModelViewSet):
-    queryset = Payment.objects.all()
-    serializer_class = PaymentSerializer
+    def get_emis(self, obj):
+        """
+        Return only the first EMI per customer.
+        """
+        first_emi = obj.emis.all().order_by('id').first()
+        if first_emi:
+            return EMISerializer(first_emi).data
+        return []
+
+# ---------------- PaymentSerializer ----------------
+class PaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = "__all__"
