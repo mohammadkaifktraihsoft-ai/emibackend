@@ -14,10 +14,10 @@ router = routers.DefaultRouter()
 router.register(r'customers', CustomerViewSet)
 router.register(r'emis', EMIViewSet)
 router.register(r'payments', PaymentViewSet)
-router.register(r'userprofile', UserProfileViewSet, basename='userprofile')
+router.register(r'user-profile', UserProfileViewSet, basename='user-profile')
 
 urlpatterns = [
-    path('ping/', ping),
+    path('ping/', ping, name='ping'),
     path('signup/', SignUpView.as_view(), name='signup'),
     path('login/', LoginView.as_view(), name='login'),
     path('', include(router.urls)),

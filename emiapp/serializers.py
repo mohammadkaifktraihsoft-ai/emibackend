@@ -1,9 +1,8 @@
 from rest_framework import serializers
-from .models import Customer, EMI, Payment
 from django.contrib.auth.models import User
-from rest_framework import serializers
+from .models import Customer, EMI, Payment
 
-#--------------signup&login---------------
+# ---------------- SIGNUP & LOGIN ----------------
 class SignUpSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -14,8 +13,7 @@ class SignUpSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(**validated_data)
         return user
 
-
-# ---------------- EMISerializer ----------------
+# ---------------- EMI SERIALIZER ----------------
 class EMISerializer(serializers.ModelSerializer):
     customer_name = serializers.CharField(source='customer.name', read_only=True)
 
@@ -23,9 +21,9 @@ class EMISerializer(serializers.ModelSerializer):
         model = EMI
         fields = '__all__'
 
-# ---------------- CustomerSerializer ----------------
+# ---------------- CUSTOMER SERIALIZER ----------------
 class CustomerSerializer(serializers.ModelSerializer):
-    emis = serializers.SerializerMethodField()  # custom field to filter EMIs
+    emis = serializers.SerializerMethodField()  # include first EMI only
 
     class Meta:
         model = Customer
@@ -40,7 +38,7 @@ class CustomerSerializer(serializers.ModelSerializer):
             return EMISerializer(first_emi).data
         return []
 
-# ---------------- PaymentSerializer ----------------
+# ---------------- PAYMENT SERIALIZER ----------------
 class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
