@@ -17,7 +17,7 @@ router.register(r'payments', PaymentViewSet)
 router.register(r'userprofile', UserProfileViewSet, basename='userprofile')
 
 urlpatterns = [
-    path('ping/', ping),
+    path('ping/', ping, name='ping'),
     path('signup/', SignUpView.as_view(), name='signup'),
     path('login/', LoginView.as_view(), name='login'),
     path('', include(router.urls)),

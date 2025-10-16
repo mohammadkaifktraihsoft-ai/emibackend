@@ -11,20 +11,27 @@ from .serializers import (
     UserProfileSerializer,
 )
 
-# ---------------- PING TEST ----------------
+# ----------- PING TEST -----------
 def ping(request):
     return JsonResponse({"message": "pong"})
 
-
-# ---------------- SIGNUP ----------------
+# ----------- SIGNUP WITH TOKEN RETURN -----------
 class SignUpView(generics.CreateAPIView):
     serializer_class = SignUpSerializer
     permission_classes = [permissions.AllowAny]
 
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+        user = self.get_serializer().instance
+        refresh = RefreshToken.for_user(user)
+        response.data['tokens'] = {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+        }
+        return response
 
-# ---------------- LOGIN ----------------
+# ----------- LOGIN WITH EXTRA FIELDS -----------
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    """Extend token serializer to include username in response"""
     def validate(self, attrs):
         data = super().validate(attrs)
         data["username"] = self.user.username
@@ -34,33 +41,28 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 class LoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
-
-# ---------------- USER PROFILE ----------------
+# ----------- USER PROFILE -----------
 class UserProfileViewSet(viewsets.ModelViewSet):
     serializer_class = UserProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        # Only return the profile for the logged-in user
         return UserProfile.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-
-# ---------------- CUSTOMERS ----------------
+# ----------- CUSTOMERS -----------
 class CustomerViewSet(viewsets.ModelViewSet):
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
 
-
-# ---------------- EMIs ----------------
+# ----------- EMIs -----------
 class EMIViewSet(viewsets.ModelViewSet):
     queryset = EMI.objects.all()
     serializer_class = EMISerializer
 
-
-# ---------------- PAYMENTS ----------------
+# ----------- PAYMENTS -----------
 class PaymentViewSet(viewsets.ModelViewSet):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
