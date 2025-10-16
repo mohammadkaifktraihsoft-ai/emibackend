@@ -1,42 +1,21 @@
 from rest_framework import serializers
+from .models import Customer, EMI, Payment
 from django.contrib.auth.models import User
-from .models import Customer, EMI, Payment, UserProfile
+from rest_framework import serializers
 
-
-
-# ---------------- SIGNUP SERIALIZER ----------------
+#--------------signup&login---------------
 class SignUpSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
-
     class Meta:
         model = User
-        fields = ['username', 'email', 'password']
+        fields = ('id', 'username', 'email', 'password')
+        extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
-        user = User.objects.create_user(
-            username=validated_data['username'],
-            email=validated_data.get('email'),
-            password=validated_data['password']
-        )
-        # Automatically create an empty profile
-        UserProfile.objects.create(user=user)
+        user = User.objects.create_user(**validated_data)
         return user
 
 
-# ---------------- USER PROFILE SERIALIZER ----------------
-class UserProfileSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(source='user.username', read_only=True)
-    email = serializers.CharField(source='user.email', read_only=True)
-
-    class Meta:
-        model = UserProfile
-        fields = [
-            'username', 'email', 'profile_image', 'qr_image',
-            'shop_name', 'distributor_name', 'distributor_contact'
-        ]
-
-
-# ---------------- EMI SERIALIZER ----------------
+# ---------------- EMISerializer ----------------
 class EMISerializer(serializers.ModelSerializer):
     customer_name = serializers.CharField(source='customer.name', read_only=True)
 
@@ -44,8 +23,7 @@ class EMISerializer(serializers.ModelSerializer):
         model = EMI
         fields = '__all__'
 
-
-# ---------------- CUSTOMER SERIALIZER ----------------
+# ---------------- CustomerSerializer ----------------
 class CustomerSerializer(serializers.ModelSerializer):
     emis = serializers.SerializerMethodField()  # custom field to filter EMIs
 
@@ -62,8 +40,7 @@ class CustomerSerializer(serializers.ModelSerializer):
             return EMISerializer(first_emi).data
         return []
 
-
-# ---------------- PAYMENT SERIALIZER ----------------
+# ---------------- PaymentSerializer ----------------
 class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
