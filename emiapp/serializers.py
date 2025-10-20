@@ -3,17 +3,16 @@ from django.contrib.auth.models import User
 from .models import Customer, EMI, Payment, UserProfile
 
 # ---------------- SIGNUP & LOGIN ----------------
-
 class SignUpSerializer(serializers.ModelSerializer):
-    phone = serializers.CharField(write_only=True, required=True)  # user phone
+    phone_number = serializers.CharField(write_only=True, required=True)  # user phone
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'password', 'phone')
+        fields = ('username', 'email', 'password', 'phone_number')
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
-        phone = validated_data.pop('phone')
+        phone_number = validated_data.pop('phone_number')
 
         # Create user
         user = User.objects.create_user(
@@ -27,7 +26,7 @@ class SignUpSerializer(serializers.ModelSerializer):
         # Create UserProfile with user phone
         UserProfile.objects.create(
             user=user,
-            phone=phone
+            phone_number=phone_number
         )
 
         return user
