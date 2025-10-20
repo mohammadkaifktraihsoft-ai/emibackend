@@ -11,6 +11,8 @@ urlpatterns = [
     path('api/v1/signup/', views.SignUpView.as_view(), name='signup'), 
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+
+     path('api-auth/', include('rest_framework.urls')),
 ]
 
 # Serve media files (for profile & QR uploads)
