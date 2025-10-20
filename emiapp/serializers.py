@@ -5,18 +5,31 @@ from .models import Customer, EMI, Payment, UserProfile
 # ---------------- SIGNUP & LOGIN ----------------
 
 class SignUpSerializer(serializers.ModelSerializer):
+    phone = serializers.CharField(write_only=True, required=True)  # user phone
+
     class Meta:
         model = User
-        fields = ('username', 'email', 'password')
+        fields = ('username', 'email', 'password', 'phone')
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
-        # Use create_user to hash the password
+        phone = validated_data.pop('phone')
+
+        # Create user
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data.get('email'),
             password=validated_data['password']
         )
+        user.is_active = True  # activate immediately
+        user.save()
+
+        # Create UserProfile with user phone
+        UserProfile.objects.create(
+            user=user,
+            phone=phone
+        )
+
         return user
 
 # ---------------- USER PROFILE SERIALIZER ----------------
