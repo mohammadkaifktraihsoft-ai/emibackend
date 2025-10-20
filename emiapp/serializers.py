@@ -33,9 +33,22 @@ class SignUpSerializer(serializers.ModelSerializer):
 
 # ---------------- USER PROFILE SERIALIZER ----------------
 class UserProfileSerializer(serializers.ModelSerializer):
+    # Include username and email from the related User model
+    username = serializers.CharField(source="user.username", read_only=True)
+    email = serializers.EmailField(source="user.email", read_only=True)
+
     class Meta:
         model = UserProfile
-        fields = "__all__"
+        fields = (
+            "username",
+            "email",
+            "phone_number",
+            "shop_name",
+            "distributor_name",
+            "distributor_contact",
+            "profile_image",
+            "qr_image",
+        )
 
 # ---------------- EMI SERIALIZER ----------------
 class EMISerializer(serializers.ModelSerializer):
