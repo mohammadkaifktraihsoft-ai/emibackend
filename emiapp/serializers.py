@@ -3,33 +3,37 @@ from django.contrib.auth.models import User
 from .models import Customer, EMI, Payment, UserProfile
 
 # ---------------- SIGNUP & LOGIN ----------------
+
 class SignUpSerializer(serializers.ModelSerializer):
-    phone_number = serializers.CharField(write_only=True, required=True)  # user phone
+    phone_number = serializers.CharField(write_only=True, required=True)
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'password', 'phone_number')
-        extra_kwargs = {'password': {'write_only': True}}
+        fields = ("username", "email", "password", "phone_number")
+        extra_kwargs = {"password": {"write_only": True}}
 
     def create(self, validated_data):
-        phone_number = validated_data.pop('phone_number')
+        phone_number = validated_data.pop("phone_number")
 
-        # Create user
+        # ✅ Use create_user() to hash password correctly
         user = User.objects.create_user(
-            username=validated_data['username'],
-            email=validated_data.get('email'),
-            password=validated_data['password']
+            username=validated_data["username"],
+            email=validated_data.get("email"),
+            password=validated_data["password"]
         )
-        user.is_active = True  # activate immediately
+
+        # ✅ Immediately activate the user
+        user.is_active = True
         user.save()
 
-        # Create UserProfile with user phone
+        # ✅ Create UserProfile with phone number
         UserProfile.objects.create(
             user=user,
             phone_number=phone_number
         )
 
         return user
+
 
 # ---------------- USER PROFILE SERIALIZER ----------------
 class UserProfileSerializer(serializers.ModelSerializer):
