@@ -111,13 +111,16 @@ WSGI_APPLICATION = 'emibackend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+
+
 DATABASES = {
     'default': dj_database_url.config(
-        default='postgresql://emibackend_db_user:5IgNGhM3iHdlMh5PSyn8KSfPoovt8WpH@dpg-d3u9tmgdl3ps73evqe4g-a/emibackend_db',  # <- your internal Render URL
-        conn_max_age=600,       # keeps DB connections open, improves performance
-        ssl_require=True        # forces SSL connection (needed for Render DBs)
+        default='postgresql://emibackend_db_user:5IgNGhM3iHdlMh5PSyn8KSfPoovt8WpH@dpg-d3u9tmgdl3ps73evqe4g-a.oregon-postgres.render.com:5432/emibackend_db',
+        conn_max_age=600,
+        ssl_require=True
     )
 }
+
 
 
 
