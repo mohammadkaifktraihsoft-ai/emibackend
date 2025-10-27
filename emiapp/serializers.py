@@ -67,20 +67,9 @@ class EMISerializer(serializers.ModelSerializer):
 
 # ---------------- CUSTOMER SERIALIZER ----------------
 class CustomerSerializer(serializers.ModelSerializer):
-    emis = serializers.SerializerMethodField()  # include only first EMI
-
     class Meta:
         model = Customer
         fields = '__all__'
-
-    def get_emis(self, obj):
-        """
-        Return only the first EMI per customer.
-        """
-        first_emi = obj.emis.all().order_by('id').first()
-        if first_emi:
-            return EMISerializer(first_emi).data
-        return []
 
 # ---------------- PAYMENT SERIALIZER ----------------
 class PaymentSerializer(serializers.ModelSerializer):

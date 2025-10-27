@@ -44,8 +44,9 @@ class UserProfileViewSet(viewsets.ModelViewSet):
 
 # ---------------- CUSTOMERS ----------------
 class CustomerViewSet(viewsets.ModelViewSet):
-    queryset = Customer.objects.all()
+    queryset = Customer.objects.all().order_by('-created_at')
     serializer_class = CustomerSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
 # ---------------- EMIs ----------------
 class EMIViewSet(viewsets.ModelViewSet):
