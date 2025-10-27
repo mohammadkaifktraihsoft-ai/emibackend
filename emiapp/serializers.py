@@ -10,30 +10,29 @@ class SignUpSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ("username", "email", "password", "phone_number", "shop_name")
-        extra_kwargs = {"password": {"write_only": True}}
+        extra_kwargs = {
+            "password": {"write_only": True}
+        }
 
     def create(self, validated_data):
-        phone_number = validated_data.pop("phone_number")
+        phone_number = validated_data.pop("phone_number", None)
         shop_name = validated_data.pop("shop_name", "")
 
-        # ✅ Use create_user() to hash password correctly
+        # ✅ Create and activate user
         user = User.objects.create_user(
             username=validated_data["username"],
             email=validated_data.get("email"),
             password=validated_data["password"],
-            is_staff=True
+            is_staff=True,
         )
-
-        # ✅ Activate user
-        user.is_active = True
+        user.is_active = True  # make user immediately active
         user.save()
 
-        # ✅ Create linked UserProfile
-        UserProfile.objects.create(
-            user=user,
-            phone_number=phone_number,
-            shop_name=shop_name
-        )
+        # ✅ Create or update the user profile
+        profile, created = UserProfile.objects.get_or_create(user=user)
+        profile.phone_number = phone_number
+        profile.shop_name = shop_name
+        profile.save()
 
         return user
 
