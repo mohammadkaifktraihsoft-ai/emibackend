@@ -9,7 +9,7 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("username", "email", "password", "phone_number")
+        fields = ("username", "email", "password", "phone_number" , "shop_name")
         extra_kwargs = {"password": {"write_only": True}}
 
     def create(self, validated_data):
@@ -30,7 +30,8 @@ class SignUpSerializer(serializers.ModelSerializer):
         # ✅ Create UserProfile with phone number
         UserProfile.objects.create(
             user=user,
-            phone_number=phone_number
+            phone_number=phone_number,
+            shop_name=validated_data.get('shop_name', "")
         )
 
         return user
