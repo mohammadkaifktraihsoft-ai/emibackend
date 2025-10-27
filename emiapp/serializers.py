@@ -3,17 +3,18 @@ from django.contrib.auth.models import User
 from .models import Customer, EMI, Payment, UserProfile
 
 # ---------------- SIGNUP & LOGIN ----------------
-
 class SignUpSerializer(serializers.ModelSerializer):
     phone_number = serializers.CharField(write_only=True, required=True)
+    shop_name = serializers.CharField(write_only=True, required=False, allow_blank=True)
 
     class Meta:
         model = User
-        fields = ("username", "email", "password", "phone_number" , "shop_name")
+        fields = ("username", "email", "password", "phone_number", "shop_name")
         extra_kwargs = {"password": {"write_only": True}}
 
     def create(self, validated_data):
         phone_number = validated_data.pop("phone_number")
+        shop_name = validated_data.pop("shop_name", "")
 
         # ✅ Use create_user() to hash password correctly
         user = User.objects.create_user(
@@ -23,18 +24,19 @@ class SignUpSerializer(serializers.ModelSerializer):
             is_staff=True
         )
 
-        # ✅ Immediately activate the user
+        # ✅ Activate user
         user.is_active = True
         user.save()
 
-        # ✅ Create UserProfile with phone number
+        # ✅ Create linked UserProfile
         UserProfile.objects.create(
             user=user,
             phone_number=phone_number,
-            shop_name=validated_data.get('shop_name', "")
+            shop_name=shop_name
         )
 
         return user
+
 
 
 # ---------------- USER PROFILE SERIALIZER ----------------
