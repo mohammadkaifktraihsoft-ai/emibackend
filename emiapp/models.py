@@ -1,10 +1,14 @@
 from django.db import models
-
 from django.contrib.auth.models import User
-# Create your models here.
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
+
+# =========================
+# USER PROFILE
+# =========================
 class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     profile_image = models.ImageField(upload_to='profile/', null=True, blank=True)
     qr_image = models.ImageField(upload_to='qr/', null=True, blank=True)
     shop_name = models.CharField(max_length=255, blank=True)
@@ -15,6 +19,19 @@ class UserProfile(models.Model):
     def __str__(self):
         return self.user.username
 
+
+# 🧩 Automatically create & update profile whenever a User is created or saved
+@receiver(post_save, sender=User)
+def create_or_update_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(user=instance)
+    else:
+        instance.profile.save()
+
+
+# =========================
+# CUSTOMER
+# =========================
 class Customer(models.Model):
     name = models.CharField(max_length=100)
     phone = models.CharField(max_length=15, unique=True)
@@ -23,6 +40,10 @@ class Customer(models.Model):
     def __str__(self):
         return self.name
 
+
+# =========================
+# EMI
+# =========================
 class EMI(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="emis")
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
@@ -33,7 +54,10 @@ class EMI(models.Model):
     def __str__(self):
         return f"EMI for {self.customer.name}"
 
-# models.py
+
+# =========================
+# PAYMENT
+# =========================
 class Payment(models.Model):
     emi = models.ForeignKey(EMI, on_delete=models.CASCADE, related_name="payments")
     amount = models.DecimalField(max_digits=10, decimal_places=2)
