@@ -44,9 +44,17 @@ class UserProfileViewSet(viewsets.ModelViewSet):
 
 # ---------------- CUSTOMERS ----------------
 class CustomerViewSet(viewsets.ModelViewSet):
-    queryset = Customer.objects.all().order_by('-created_at')
+    queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # Only return customers belonging to the logged-in user
+        return Customer.objects.filter(user=self.request.user).order_by('-created_at')
+
+    def perform_create(self, serializer):
+        # Automatically assign the logged-in user when creating a new customer
+        serializer.save(user=self.request.user)
 
 # ---------------- EMIs ----------------
 class EMIViewSet(viewsets.ModelViewSet):

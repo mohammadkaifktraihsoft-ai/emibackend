@@ -34,6 +34,7 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
 # =========================
 
 class Customer(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="customers")
     name = models.CharField(max_length=100)
     mobile = models.CharField(max_length=15, unique=True)
     alternate_mobile = models.CharField(max_length=15, blank=True, null=True)

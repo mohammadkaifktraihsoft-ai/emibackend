@@ -69,7 +69,18 @@ class EMISerializer(serializers.ModelSerializer):
 class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customer
-        fields = '__all__'
+        fields = [
+            "id",
+            "name",
+            "mobile",
+            "alternate_mobile",
+            "email",
+            "loan_account_no",
+            "imei_1",
+            "imei_2",
+            "created_at",
+        ]
+        read_only_fields = ["id", "created_at"]
 
 # ---------------- PAYMENT SERIALIZER ----------------
 class PaymentSerializer(serializers.ModelSerializer):
