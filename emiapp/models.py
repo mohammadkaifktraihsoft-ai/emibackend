@@ -3,6 +3,10 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
+import uuid
+import qrcode
+from io import BytesIO
+from django.core.files.base import ContentFile
 
 # =========================
 # USER PROFILE
@@ -47,6 +51,62 @@ class Customer(models.Model):
     def __str__(self):
         return self.name
 
+#==========================
+#lock/unlock device status
+#=========================
+
+class Device(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="devices")
+    customer = models.ForeignKey("Customer", on_delete=models.SET_NULL, null=True, blank=True, related_name="device")
+    imei = models.CharField(max_length=50, unique=True)
+    is_locked = models.BooleanField(default=False)
+    registered_at = models.DateTimeField(auto_now_add=True)
+    last_action = models.CharField(max_length=20, blank=True, null=True)  # "locked" / "unlocked" / "registered"
+    last_updated = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        status = "🔒 Locked" if self.is_locked else "🔓 Unlocked"
+        return f"{self.customer.name if self.customer else 'Unassigned'} ({status})"
+
+
+#======= blance key =================
+
+class BalanceKey(models.Model):
+    key = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    admin_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="balance_keys")
+    is_used = models.BooleanField(default=False)
+    used_by = models.ForeignKey(
+        'Customer', null=True, blank=True, on_delete=models.SET_NULL, related_name='used_key'
+    )
+    qr_image = models.ImageField(upload_to='balance_qr/', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    used_at = models.DateTimeField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)  # Save first to get ID
+
+        # ✅ Automatically generate QR code after saving (only once)
+        if not self.qr_image:
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_L,
+                box_size=10,
+                border=4,
+            )
+            qr.add_data(str(self.key))
+            qr.make(fit=True)
+
+            img = qr.make_image(fill_color="black", back_color="white")
+            buffer = BytesIO()
+            img.save(buffer, format='PNG')
+            file_name = f'balancekey_{self.key}.png'
+            self.qr_image.save(file_name, ContentFile(buffer.getvalue()), save=False)
+            super().save(update_fields=['qr_image'])  # Save again with QR image
+
+    def __str__(self):
+        return f"{self.key} ({'USED' if self.is_used else 'AVAILABLE'})"
+
+#========================
 
 # =========================
 # EMI

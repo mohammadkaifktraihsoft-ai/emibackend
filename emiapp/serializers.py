@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Customer, EMI, Payment, UserProfile
+from .models import Customer, EMI, Payment, UserProfile, Device, BalanceKey 
+
 
 # ---------------- SIGNUP & LOGIN ----------------
 class SignUpSerializer(serializers.ModelSerializer):
@@ -56,6 +57,45 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "profile_image",
             "qr_image",
         )
+
+# ---------------- DEVICE SERIALIZER ----------------
+class DeviceSerializer(serializers.ModelSerializer):
+    customer_name = serializers.CharField(source="customer.name", read_only=True)
+    user_name = serializers.CharField(source="user.username", read_only=True)
+
+    class Meta:
+        model = Device
+        fields = [
+            "id",
+            "user_name",
+            "customer_name",
+            "imei",
+            "is_locked",
+            "registered_at",
+        ]
+        read_only_fields = ["id", "registered_at", "user_name", "customer_name"]
+
+# ---------------- BALANCE KEY SERIALIZER ----------------
+
+
+class BalanceKeySerializer(serializers.ModelSerializer):
+    admin_username = serializers.CharField(source='admin_user.username', read_only=True)
+    qr_image = serializers.ImageField(read_only=True)
+
+    class Meta:
+        model = BalanceKey
+        fields = [
+            "id",
+            "key",
+            "admin_username",
+            "is_used",
+            "used_by",
+            "qr_image",
+            "created_at",
+            "used_at",
+        ]
+
+
 
 # ---------------- EMI SERIALIZER ----------------
 class EMISerializer(serializers.ModelSerializer):
