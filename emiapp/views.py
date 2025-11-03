@@ -68,6 +68,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
 # ---------------- DEVICE LOCK/UNLOCK ----------------
 
 # ✅ 1. Register Device (called from client app)
+@api_view(["POST"])
 def register_device(request):
     key_value = request.data.get("key")
     imei = request.data.get("imei")
@@ -79,18 +80,22 @@ def register_device(request):
     if not imei:
         return Response({"error": "IMEI is required"}, status=status.HTTP_400_BAD_REQUEST)
 
+    # ✅ 1. Check customer exists with this IMEI
+    try:
+        customer = Customer.objects.get(imei_1=imei)
+    except Customer.DoesNotExist:
+        return Response(
+            {"error": "Customer not found. Please add customer details first."},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # ✅ 2. Check balance key is valid and not used
     try:
         balance_key = BalanceKey.objects.get(key=key_value, is_used=False)
     except BalanceKey.DoesNotExist:
         return Response({"error": "Invalid or already used balance key"}, status=status.HTTP_400_BAD_REQUEST)
 
-    customer = Customer.objects.create(
-        user=balance_key.admin_user,
-        name=name,
-        mobile=mobile,
-        imei_1=imei,
-    )
-
+    # ✅ 3. Link customer with this balance key
     balance_key.is_used = True
     balance_key.used_by = customer
     balance_key.used_at = timezone.now()
