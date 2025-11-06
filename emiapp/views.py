@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from django.contrib.auth.models import User
 from .models import Customer, EMI, Payment, UserProfile, Device, BalanceKey
-from dateutil.relativedelta import relativedelta
+from datetime import timedelta
 from django.utils.timezone import now
 from django.utils import timezone
 from .serializers import (
@@ -67,7 +67,6 @@ class CustomerViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
 
-
 @api_view(["POST"])
 def update_emi_payment(request, customer_id):
     try:
@@ -75,18 +74,17 @@ def update_emi_payment(request, customer_id):
     except Customer.DoesNotExist:
         return Response({"error": "Customer not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    # ✅ Ensure fields are not None before using
+    # ✅ Increase paid months
     customer.paid_months = (customer.paid_months or 0) + 1
+
+    # ✅ Update remaining months
     customer.remaining_months = (customer.total_months or 0) - (customer.paid_months or 0)
 
-    # ✅ Update next payment date safely
+    # ✅ Update next payment date +30 days (safe & built-in)
     if customer.next_payment_date:
-        try:
-            customer.next_payment_date += relativedelta(months=1)
-        except TypeError:
-            customer.next_payment_date = now().date() + relativedelta(months=1)
+        customer.next_payment_date = customer.next_payment_date + timedelta(days=30)
     else:
-        customer.next_payment_date = now().date() + relativedelta(months=1)
+        customer.next_payment_date = now().date() + timedelta(days=30)
 
     customer.save()
 
