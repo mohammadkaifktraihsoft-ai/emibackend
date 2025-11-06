@@ -6,6 +6,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from django.contrib.auth.models import User
 from .models import Customer, EMI, Payment, UserProfile, Device, BalanceKey
+from django.utils.timezone import now
+from dateutil.relativedelta import relativedelta
 from django.utils import timezone
 from .serializers import (
     CustomerSerializer,
@@ -68,41 +70,33 @@ class CustomerViewSet(viewsets.ModelViewSet):
 
 @api_view(["POST"])
 def update_emi_payment(request, customer_id):
-    print("DEBUG: Called update_emi_payment with customer_id =", customer_id)
     try:
         customer = Customer.objects.get(id=customer_id)
     except Customer.DoesNotExist:
-        print("DEBUG: Customer.DoesNotExist for id=", customer_id)
         return Response({"error": "Customer not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    # Debug print of fields
-    print("DEBUG: Before update -> paid_months:", customer.paid_months, 
-          "total_months:", customer.total_months, "next_payment_date:", customer.next_payment_date)
-
-    # Increase paid months
+    # ✅ Ensure fields are not None before using
     customer.paid_months = (customer.paid_months or 0) + 1
-    # Update remaining months
-    customer.remaining_months = (customer.total_months or 0) - customer.paid_months
-    from django.utils.timezone import now
-    from dateutil.relativedelta import relativedelta
+    customer.remaining_months = (customer.total_months or 0) - (customer.paid_months or 0)
+
+    # ✅ Update next payment date safely
     if customer.next_payment_date:
-        customer.next_payment_date += relativedelta(months=1)
+        try:
+            customer.next_payment_date += relativedelta(months=1)
+        except TypeError:
+            customer.next_payment_date = now().date() + relativedelta(months=1)
     else:
         customer.next_payment_date = now().date() + relativedelta(months=1)
 
     customer.save()
-    print("DEBUG: After update -> paid_months:", customer.paid_months, 
-          "remaining_months:", customer.remaining_months, "next_payment_date:", customer.next_payment_date)
 
     return Response({
-        "message": "EMI updated successfully.",
+        "message": "EMI updated successfully",
         "paid_months": customer.paid_months,
         "remaining_months": customer.remaining_months,
         "next_payment_date": customer.next_payment_date,
         "is_locked": customer.is_locked
     }, status=status.HTTP_200_OK)
-
-
 
 # ---------------- DEVICE LOCK/UNLOCK ----------------
 
