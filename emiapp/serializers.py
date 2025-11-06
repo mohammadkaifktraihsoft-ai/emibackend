@@ -123,6 +123,8 @@ class CustomerSerializer(serializers.ModelSerializer):
             'total_emi_amount',
             'emi_per_month',
             'total_months',
+            'paid_months',
+            'remaining_months',
             'next_payment_date',
         ]
         read_only_fields = ["id", "created_at"]

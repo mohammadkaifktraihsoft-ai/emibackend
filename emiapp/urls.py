@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework import routers
 from . import views_balancekey
+from .views import update_emi_payment
 from .views import (
     ping,
     SignUpView,
@@ -36,7 +37,7 @@ urlpatterns = [
     path("device/unlock/", unlock_device, name="unlock-device"),
     # balance key api
     path("balance-keys/", views_balancekey.BalanceKeyListCreateView.as_view(), name="balance-key-list"),
-
+    path('api/update-emi/<int:customer_id>/', update_emi_payment, name='update_emi'),
     # ✅ All router-based API endpoints (customers, EMI, payments, etc.)
     path('', include(router.urls)),
 ]

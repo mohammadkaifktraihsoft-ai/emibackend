@@ -65,6 +65,39 @@ class CustomerViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
 
+
+@api_view(["POST"])
+def update_emi_payment(request, customer_id):
+    try:
+        customer = Customer.objects.get(id=customer_id)
+    except Customer.DoesNotExist:
+        return Response({"error": "Customer not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    # ✅ 1. Increase paid months
+    customer.paid_months = (customer.paid_months or 0) + 1
+
+    # ✅ 2. Update remaining months
+    customer.remaining_months = (customer.total_months or 0) - (customer.paid_months or 0)
+
+    # ✅ 3. Update next payment date to +1 month
+    from django.utils.timezone import now
+    from dateutil.relativedelta import relativedelta
+    if customer.next_payment_date:
+        customer.next_payment_date += relativedelta(months=1)
+    else:
+        customer.next_payment_date = now().date() + relativedelta(months=1)
+
+    customer.save()
+
+    return Response({
+        "message": "EMI updated successfully.",
+        "paid_months": customer.paid_months,
+        "remaining_months": customer.remaining_months,
+        "next_payment_date": customer.next_payment_date,
+        "is_locked": customer.is_locked  # ✅ Status unchanged
+    }, status=status.HTTP_200_OK)
+
+
 # ---------------- DEVICE LOCK/UNLOCK ----------------
 
 # ✅ 1. Register Device (called from client app)

@@ -51,6 +51,8 @@ class Customer(models.Model):
     total_emi_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     emi_per_month = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     total_months = models.IntegerField(null=True, blank=True)
+    paid_months = models.IntegerField(default=0)
+    remaining_months = models.IntegerField(null=True, blank=True)    
     next_payment_date = models.DateField(null=True, blank=True)
 
 
