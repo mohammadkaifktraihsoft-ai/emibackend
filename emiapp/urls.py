@@ -37,7 +37,7 @@ urlpatterns = [
     path("device/unlock/", unlock_device, name="unlock-device"),
     # balance key api
     path("balance-keys/", views_balancekey.BalanceKeyListCreateView.as_view(), name="balance-key-list"),
-    path('api/update-emi/<int:customer_id>/', update_emi_payment, name='update_emi'),
+    path('update-emi/<int:customer_id>/', update_emi_payment, name='update_emi'),
     # ✅ All router-based API endpoints (customers, EMI, payments, etc.)
     path('', include(router.urls)),
 ]
