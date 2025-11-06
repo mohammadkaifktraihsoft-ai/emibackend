@@ -72,15 +72,24 @@ class CustomerViewSet(viewsets.ModelViewSet):
 def register_device(request):
     key_value = request.data.get("key")
     imei = request.data.get("imei")
+
+    # New customer details
     name = request.data.get("name")
     mobile = request.data.get("mobile")
+
+    # New EMI Details
+    mobile_model = request.data.get("mobile_model")
+    total_emi = request.data.get("total_emi_amount")
+    emi_monthly = request.data.get("emi_per_month")
+    total_months = request.data.get("total_months")
+    next_payment_date = request.data.get("next_payment_date")
 
     if not key_value:
         return Response({"error": "Balance key is required"}, status=status.HTTP_400_BAD_REQUEST)
     if not imei:
         return Response({"error": "IMEI is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-    # ✅ 1. Check customer exists with this IMEI
+    # ✅ 1. Check if customer exists with this IMEI
     try:
         customer = Customer.objects.get(imei_1=imei)
     except Customer.DoesNotExist:
@@ -89,13 +98,23 @@ def register_device(request):
             status=status.HTTP_404_NOT_FOUND
         )
 
-    # ✅ 2. Check balance key is valid and not used
+    # ✅ 2. Check balance key validity
     try:
         balance_key = BalanceKey.objects.get(key=key_value, is_used=False)
     except BalanceKey.DoesNotExist:
         return Response({"error": "Invalid or already used balance key"}, status=status.HTTP_400_BAD_REQUEST)
 
-    # ✅ 3. Link customer with this balance key
+    # ✅ 3. Save EMI/Customer info if provided
+    customer.name = name or customer.name
+    customer.mobile = mobile or customer.mobile
+    customer.mobile_model = mobile_model or customer.mobile_model
+    customer.total_emi_amount = total_emi or customer.total_emi_amount
+    customer.emi_per_month = emi_monthly or customer.emi_per_month
+    customer.total_months = total_months or customer.total_months
+    customer.next_payment_date = next_payment_date or customer.next_payment_date
+    customer.save()
+
+    # ✅ 4. Mark Balance Key used
     balance_key.is_used = True
     balance_key.used_by = customer
     balance_key.used_at = timezone.now()
@@ -106,6 +125,7 @@ def register_device(request):
         "admin_user": balance_key.admin_user.username,
         "customer_id": customer.id
     }, status=status.HTTP_201_CREATED)
+
 
 # ✅ 2. Lock Device (called from admin app)
 @api_view(["POST"])

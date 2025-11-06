@@ -119,6 +119,11 @@ class CustomerSerializer(serializers.ModelSerializer):
             "imei_1",
             "imei_2",
             "created_at",
+            'mobile_model',
+            'total_emi_amount',
+            'emi_per_month',
+            'total_months',
+            'next_payment_date',
         ]
         read_only_fields = ["id", "created_at"]
 
