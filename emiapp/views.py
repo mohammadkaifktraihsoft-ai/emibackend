@@ -74,15 +74,20 @@ def update_emi_payment(request, customer_id):
     except Customer.DoesNotExist:
         return Response({"error": "Customer not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    # ✅ Increase paid months
-    customer.paid_months = (customer.paid_months or 0) + 1
+    # Optional data from request (if sent)
+    paid_months = customer.paid_months or 0
+    total_months = customer.total_months or 0
 
-    # ✅ Update remaining months
-    customer.remaining_months = (customer.total_months or 0) - (customer.paid_months or 0)
+    # ✅ Prevent over-payment
+    if paid_months >= total_months and total_months != 0:
+        return Response({"message": "All EMI already paid."}, status=status.HTTP_400_BAD_REQUEST)
 
-    # ✅ Update next payment date +30 days (safe & built-in)
+    # ✅ Increase EMI month
+    customer.paid_months = paid_months + 1
+    customer.remaining_months = total_months - customer.paid_months
+
     if customer.next_payment_date:
-        customer.next_payment_date = customer.next_payment_date + timedelta(days=30)
+        customer.next_payment_date += timedelta(days=30)
     else:
         customer.next_payment_date = now().date() + timedelta(days=30)
 
@@ -92,9 +97,9 @@ def update_emi_payment(request, customer_id):
         "message": "EMI updated successfully",
         "paid_months": customer.paid_months,
         "remaining_months": customer.remaining_months,
-        "next_payment_date": customer.next_payment_date,
-        "is_locked": customer.is_locked
+        "next_payment_date": customer.next_payment_date
     }, status=status.HTTP_200_OK)
+
 
 # ---------------- DEVICE LOCK/UNLOCK ----------------
 
