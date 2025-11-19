@@ -32,9 +32,9 @@ urlpatterns = [
     path('login/', LoginView.as_view(), name='login'),
 
     # ✅ Device control APIs (for client app)
-    path("device/register/", register_device, name="register-device"),
-    path("device/lock/", lock_device, name="lock-device"),
-    path("device/unlock/", unlock_device, name="unlock-device"),
+    path("device/register", register_device, name="register-device"),
+    path("device/lock", lock_device, name="lock-device"),
+    path("device/unlock", unlock_device, name="unlock-device"),
     # balance key api
     path("balance-keys/", views_balancekey.BalanceKeyListCreateView.as_view(), name="balance-key-list"),
     path('update-emi/<int:customer_id>/', update_emi_payment, name='update_emi'),
