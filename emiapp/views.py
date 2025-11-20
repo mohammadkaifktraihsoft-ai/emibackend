@@ -121,23 +121,26 @@ def register_device(request):
     next_payment_date = request.data.get("next_payment_date")
 
     if not key_value:
-        return Response({"error": "Balance key is required"}, status=400)
+        return Response({"error": "Balance key is required"}, status=status.HTTP_400_BAD_REQUEST)
     if not imei:
-        return Response({"error": "IMEI is required"}, status=400)
+        return Response({"error": "IMEI is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-    # 1️⃣ Check customer by IMEI
+    # ✅ 1. Check if customer exists with this IMEI
     try:
         customer = Customer.objects.get(imei_1=imei)
     except Customer.DoesNotExist:
-        return Response({"error": "Customer not found"}, status=404)
+        return Response(
+            {"error": "Customer not found. Please add customer details first."},
+            status=status.HTTP_404_NOT_FOUND
+        )
 
-    # 2️⃣ Check balance key validity
+    # ✅ 2. Check balance key validity
     try:
         balance_key = BalanceKey.objects.get(key=key_value, is_used=False)
     except BalanceKey.DoesNotExist:
-        return Response({"error": "Invalid or used key"}, status=400)
+        return Response({"error": "Invalid or already used balance key"}, status=status.HTTP_400_BAD_REQUEST)
 
-    # 3️⃣ Update customer EMI info
+    # ✅ 3. Save EMI/Customer info if provided
     customer.name = name or customer.name
     customer.mobile = mobile or customer.mobile
     customer.mobile_model = mobile_model or customer.mobile_model
@@ -147,16 +150,7 @@ def register_device(request):
     customer.next_payment_date = next_payment_date or customer.next_payment_date
     customer.save()
 
-    # 4️⃣ Create or Update Device entry  
-    Device.objects.update_or_create(
-        imei_1=imei,                      # USE SAME FIELD NAME
-        defaults={
-            "customer": customer,
-            "is_locked": False
-        }
-    )
-
-    # 5️⃣ Mark key used
+    # ✅ 4. Mark Balance Key used
     balance_key.is_used = True
     balance_key.used_by = customer
     balance_key.used_at = timezone.now()
@@ -166,8 +160,7 @@ def register_device(request):
         "message": "Device registered successfully",
         "admin_user": balance_key.admin_user.username,
         "customer_id": customer.id
-    }, status=201)
-
+    }, status=status.HTTP_201_CREATED)
 
 
 # ✅ 2. Lock Device (called from admin app)
@@ -179,7 +172,7 @@ def lock_device(request):
         return Response({"error": "IMEI is required"}, status=400)
 
     try:
-        device = Device.objects.get(imei_1=imei)
+        device = Device.objects.get(imei=imei)
         device.is_locked = True
         device.save()
         return Response({"message": "Device locked successfully"}, status=200)
@@ -196,7 +189,7 @@ def unlock_device(request):
         return Response({"error": "IMEI is required"}, status=400)
 
     try:
-        device = Device.objects.get(imei_1=imei)
+        device = Device.objects.get(imei=imei)
         device.is_locked = False
         device.save()
         return Response({"message": "Device unlocked successfully"}, status=200)
