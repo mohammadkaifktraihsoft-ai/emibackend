@@ -117,21 +117,21 @@ def register_device(request):
     if not imei:
         return Response({"error": "IMEI is required"}, status=400)
 
-    # 🔍 Find customer by IMEI
+    # ✅ Find customer using IMEI from phone
     try:
         customer = Customer.objects.get(Q(imei_1=imei) | Q(imei_2=imei))
     except Customer.DoesNotExist:
         return Response({"error": "Customer not found"}, status=404)
 
-    # 🔑 Check key
+    # ✅ Check balance key
     try:
         balance_key = BalanceKey.objects.get(key=key_value, is_used=False)
     except BalanceKey.DoesNotExist:
         return Response({"error": "Invalid or used key"}, status=400)
 
-    # 📱 Create device entry
+    # ✅ Register / Update Device entry
     device, created = Device.objects.update_or_create(
-        imei=imei,
+        imei=imei,     # ← store EXACT IMEI from phone
         defaults={
             "customer": customer,
             "user": balance_key.admin_user,
@@ -141,13 +141,14 @@ def register_device(request):
         }
     )
 
-    # 🔑 Mark key as used
+    # 🔑 Mark key used
     balance_key.is_used = True
     balance_key.used_by = customer
     balance_key.used_at = timezone.now()
     balance_key.save()
 
     return Response({"message": "Device registered successfully"}, status=201)
+
 
 
 
