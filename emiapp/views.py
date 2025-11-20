@@ -8,7 +8,6 @@ from django.contrib.auth.models import User
 from .models import Customer, EMI, Payment, UserProfile, Device, BalanceKey
 from datetime import timedelta
 from django.utils.timezone import now
-from django.db.models import Q
 from django.utils import timezone
 from .serializers import (
     CustomerSerializer,
@@ -110,47 +109,68 @@ def register_device(request):
     key_value = request.data.get("key")
     imei = request.data.get("imei")
 
+    # New customer details
+    name = request.data.get("name")
+    mobile = request.data.get("mobile")
+
+    # New EMI Details
+    mobile_model = request.data.get("mobile_model")
+    total_emi = request.data.get("total_emi_amount")
+    emi_monthly = request.data.get("emi_per_month")
+    total_months = request.data.get("total_months")
+    next_payment_date = request.data.get("next_payment_date")
+
     if not key_value:
         return Response({"error": "Balance key is required"}, status=400)
-
     if not imei:
         return Response({"error": "IMEI is required"}, status=400)
 
-    # ✔ Find customer using IMEI
+    # 1️⃣ Check customer by IMEI
     try:
-        customer = Customer.objects.get(Q(imei_1=imei) | Q(imei_2=imei))
+        customer = Customer.objects.get(imei_1=imei)
     except Customer.DoesNotExist:
         return Response({"error": "Customer not found"}, status=404)
 
-    # ✔ Validate balance key
+    # 2️⃣ Check balance key validity
     try:
         balance_key = BalanceKey.objects.get(key=key_value, is_used=False)
     except BalanceKey.DoesNotExist:
         return Response({"error": "Invalid or used key"}, status=400)
 
-    # ✔ Create or Update device
-    device, created = Device.objects.update_or_create(
-        imei=imei,                                  # ← store exact phone imei
+    # 3️⃣ Update customer EMI info
+    customer.name = name or customer.name
+    customer.mobile = mobile or customer.mobile
+    customer.mobile_model = mobile_model or customer.mobile_model
+    customer.total_emi_amount = total_emi or customer.total_emi_amount
+    customer.emi_per_month = emi_monthly or customer.emi_per_month
+    customer.total_months = total_months or customer.total_months
+    customer.next_payment_date = next_payment_date or customer.next_payment_date
+    customer.save()
+
+    # 4️⃣ Create or Update Device entry  
+    Device.objects.update_or_create(
+        imei=imei,                      # USE SAME FIELD NAME
         defaults={
             "customer": customer,
-            "user": balance_key.admin_user,
-            "is_locked": False,
-            "last_action": "registered",
-            "last_updated": timezone.now()
+            "is_locked": False
         }
     )
 
-    # ✔ Mark key used
+    # 5️⃣ Mark key used
     balance_key.is_used = True
     balance_key.used_by = customer
     balance_key.used_at = timezone.now()
     balance_key.save()
 
-    return Response({"message": "Device registered successfully"}, status=201)
+    return Response({
+        "message": "Device registered successfully",
+        "admin_user": balance_key.admin_user.username,
+        "customer_id": customer.id
+    }, status=201)
 
 
 
-# 🔒 Lock Device
+# ✅ 2. Lock Device (called from admin app)
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 def lock_device(request):
@@ -159,18 +179,15 @@ def lock_device(request):
         return Response({"error": "IMEI is required"}, status=400)
 
     try:
-        device = Device.objects.get(imei=imei)
+        device = Device.objects.get(imei_1=imei)
         device.is_locked = True
-        device.last_action = "locked"
-        device.last_updated = timezone.now()
         device.save()
         return Response({"message": "Device locked successfully"}, status=200)
     except Device.DoesNotExist:
         return Response({"error": "Device not found"}, status=404)
 
 
-
-# 🔓 Unlock Device
+# ✅ 3. Unlock Device (called from admin app)
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 def unlock_device(request):
@@ -179,10 +196,8 @@ def unlock_device(request):
         return Response({"error": "IMEI is required"}, status=400)
 
     try:
-        device = Device.objects.get(imei=imei)
+        device = Device.objects.get(imei_1=imei)
         device.is_locked = False
-        device.last_action = "unlocked"
-        device.last_updated = timezone.now()
         device.save()
         return Response({"message": "Device unlocked successfully"}, status=200)
     except Device.DoesNotExist:
