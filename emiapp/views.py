@@ -149,7 +149,7 @@ def register_device(request):
 
     # 4️⃣ Create or Update Device entry  
     Device.objects.update_or_create(
-        imei=imei,                      # USE SAME FIELD NAME
+        imei_1=imei,                      # USE SAME FIELD NAME
         defaults={
             "customer": customer,
             "is_locked": False
