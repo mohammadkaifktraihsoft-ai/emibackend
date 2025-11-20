@@ -172,7 +172,7 @@ def lock_device(request):
         return Response({"error": "IMEI is required"}, status=400)
 
     try:
-        device = Device.objects.get(imei=imei)
+        device = Device.objects.get(imei_1=imei)
         device.is_locked = True
         device.save()
         return Response({"message": "Device locked successfully"}, status=200)
@@ -189,7 +189,7 @@ def unlock_device(request):
         return Response({"error": "IMEI is required"}, status=400)
 
     try:
-        device = Device.objects.get(imei=imei)
+        device = Device.objects.get(imei_1=imei)
         device.is_locked = False
         device.save()
         return Response({"message": "Device unlocked successfully"}, status=200)
