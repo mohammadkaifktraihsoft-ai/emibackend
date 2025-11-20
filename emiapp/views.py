@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 from .models import Customer, EMI, Payment, UserProfile, Device, BalanceKey
 from datetime import timedelta
 from django.utils.timezone import now
+from django.db.models import Q
 from django.utils import timezone
 from .serializers import (
     CustomerSerializer,
@@ -115,37 +116,41 @@ def register_device(request):
     if not imei:
         return Response({"error": "IMEI is required"}, status=400)
 
-    # ✔ Find customer by imei_1 or imei_2
+    # ✔ Find customer using IMEI
     try:
         customer = Customer.objects.get(Q(imei_1=imei) | Q(imei_2=imei))
     except Customer.DoesNotExist:
         return Response({"error": "Customer not found"}, status=404)
 
-    # ✔ Key validation
+    # ✔ Validate balance key
     try:
         balance_key = BalanceKey.objects.get(key=key_value, is_used=False)
     except BalanceKey.DoesNotExist:
         return Response({"error": "Invalid or used key"}, status=400)
 
-    # ✔ Create or update device
-    Device.objects.update_or_create(
-        imei=customer.imei_1,   
+    # ✔ Create or Update device
+    device, created = Device.objects.update_or_create(
+        imei=imei,                                  # ← store exact phone imei
         defaults={
             "customer": customer,
             "user": balance_key.admin_user,
-            "is_locked": False
+            "is_locked": False,
+            "last_action": "registered",
+            "last_updated": timezone.now()
         }
     )
 
+    # ✔ Mark key used
     balance_key.is_used = True
     balance_key.used_by = customer
+    balance_key.used_at = timezone.now()
     balance_key.save()
 
-    return Response({"message": "Device registered successfully"})
+    return Response({"message": "Device registered successfully"}, status=201)
 
 
 
-# ✅ 2. Lock Device (called from admin app)
+# 🔒 Lock Device
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 def lock_device(request):
@@ -156,13 +161,16 @@ def lock_device(request):
     try:
         device = Device.objects.get(imei=imei)
         device.is_locked = True
+        device.last_action = "locked"
+        device.last_updated = timezone.now()
         device.save()
         return Response({"message": "Device locked successfully"}, status=200)
     except Device.DoesNotExist:
         return Response({"error": "Device not found"}, status=404)
 
 
-# ✅ 3. Unlock Device (called from admin app)
+
+# 🔓 Unlock Device
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 def unlock_device(request):
@@ -173,6 +181,8 @@ def unlock_device(request):
     try:
         device = Device.objects.get(imei=imei)
         device.is_locked = False
+        device.last_action = "unlocked"
+        device.last_updated = timezone.now()
         device.save()
         return Response({"message": "Device unlocked successfully"}, status=200)
     except Device.DoesNotExist:
