@@ -105,19 +105,11 @@ def update_emi_payment(request, customer_id):
 # ---------------- DEVICE LOCK/UNLOCK ----------------
 
 # ✅ 1. Register Device (called from client app)
+
 @api_view(["POST"])
 def register_device(request):
     key_value = request.data.get("key")
     imei = request.data.get("imei")
-
-    # New customer / EMI details
-    name = request.data.get("name")
-    mobile = request.data.get("mobile")
-    mobile_model = request.data.get("mobile_model")
-    total_emi = request.data.get("total_emi_amount")
-    emi_monthly = request.data.get("emi_per_month")
-    total_months = request.data.get("total_months")
-    next_payment_date = request.data.get("next_payment_date")
 
     if not key_value:
         return Response({"error": "Balance key is required"}, status=400)
@@ -125,29 +117,19 @@ def register_device(request):
     if not imei:
         return Response({"error": "IMEI is required"}, status=400)
 
-    # ✔ Find customer by ANY IMEI (imei_1 or imei_2)
+    # 🔍 Find customer by IMEI
     try:
         customer = Customer.objects.get(Q(imei_1=imei) | Q(imei_2=imei))
     except Customer.DoesNotExist:
         return Response({"error": "Customer not found"}, status=404)
 
-    # ✔ Validate balance key
+    # 🔑 Check key
     try:
         balance_key = BalanceKey.objects.get(key=key_value, is_used=False)
     except BalanceKey.DoesNotExist:
         return Response({"error": "Invalid or used key"}, status=400)
 
-    # ✔ Update customer EMI details (if provided)
-    customer.name = name or customer.name
-    customer.mobile = mobile or customer.mobile
-    customer.mobile_model = mobile_model or customer.mobile_model
-    customer.total_emi_amount = total_emi or customer.total_emi_amount
-    customer.emi_per_month = emi_monthly or customer.emi_per_month
-    customer.total_months = total_months or customer.total_months
-    customer.next_payment_date = next_payment_date or customer.next_payment_date
-    customer.save()
-
-    # ✔ Create or update the DEVICE entry
+    # 📱 Create device entry
     device, created = Device.objects.update_or_create(
         imei=imei,
         defaults={
@@ -159,7 +141,7 @@ def register_device(request):
         }
     )
 
-    # ✔ Mark key as used
+    # 🔑 Mark key as used
     balance_key.is_used = True
     balance_key.used_by = customer
     balance_key.used_at = timezone.now()
@@ -168,7 +150,8 @@ def register_device(request):
     return Response({"message": "Device registered successfully"}, status=201)
 
 
-# 🔒 Lock Device
+
+# 🔒 LOCK DEVICE
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 def lock_device(request):
@@ -178,18 +161,16 @@ def lock_device(request):
 
     try:
         device = Device.objects.get(imei=imei)
+        device.is_locked = True
+        device.last_action = "locked"
+        device.last_updated = timezone.now()
+        device.save()
+        return Response({"message": "Device locked successfully"}, status=200)
     except Device.DoesNotExist:
         return Response({"error": "Device not found"}, status=404)
 
-    device.is_locked = True
-    device.last_action = "locked"
-    device.last_updated = timezone.now()
-    device.save()
 
-    return Response({"message": "Device locked successfully"}, status=200)
-
-
-# 🔓 Unlock Device
+# 🔓 UNLOCK DEVICE
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 def unlock_device(request):
@@ -199,16 +180,13 @@ def unlock_device(request):
 
     try:
         device = Device.objects.get(imei=imei)
+        device.is_locked = False
+        device.last_action = "unlocked"
+        device.last_updated = timezone.now()
+        device.save()
+        return Response({"message": "Device unlocked successfully"}, status=200)
     except Device.DoesNotExist:
         return Response({"error": "Device not found"}, status=404)
-
-    device.is_locked = False
-    device.last_action = "unlocked"
-    device.last_updated = timezone.now()
-    device.save()
-
-    return Response({"message": "Device unlocked successfully"}, status=200)
-
 
 #------------------ balance key  ----------------
 class BalanceKeyViewSet(viewsets.ModelViewSet):
