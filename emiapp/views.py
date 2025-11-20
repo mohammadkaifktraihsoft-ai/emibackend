@@ -109,47 +109,27 @@ def register_device(request):
     key_value = request.data.get("key")
     imei = request.data.get("imei")
 
-    name = request.data.get("name")
-    mobile = request.data.get("mobile")
-
-    mobile_model = request.data.get("mobile_model")
-    total_emi = request.data.get("total_emi_amount")
-    emi_monthly = request.data.get("emi_per_month")
-    total_months = request.data.get("total_months")
-    next_payment_date = request.data.get("next_payment_date")
-
     if not key_value:
         return Response({"error": "Balance key is required"}, status=400)
+
     if not imei:
         return Response({"error": "IMEI is required"}, status=400)
 
-    # 🔍 FIND CUSTOMER BY IMEI_1 or IMEI_2
-    customer = Customer.objects.filter(imei_1=imei).first()
-    if not customer:
-        customer = Customer.objects.filter(imei_2=imei).first()
-
-    if not customer:
+    # ✔ Find customer by imei_1 or imei_2
+    try:
+        customer = Customer.objects.get(Q(imei_1=imei) | Q(imei_2=imei))
+    except Customer.DoesNotExist:
         return Response({"error": "Customer not found"}, status=404)
 
-    # 🔑 balance key check
+    # ✔ Key validation
     try:
         balance_key = BalanceKey.objects.get(key=key_value, is_used=False)
     except BalanceKey.DoesNotExist:
         return Response({"error": "Invalid or used key"}, status=400)
 
-    # Update customer info
-    customer.name = name or customer.name
-    customer.mobile = mobile or customer.mobile
-    customer.mobile_model = mobile_model or customer.mobile_model
-    customer.total_emi_amount = total_emi or customer.total_emi_amount
-    customer.emi_per_month = emi_monthly or customer.emi_per_month
-    customer.total_months = total_months or customer.total_months
-    customer.next_payment_date = next_payment_date or customer.next_payment_date
-    customer.save()
-
-    # 🔧 Create or update Device
+    # ✔ Create or update device
     Device.objects.update_or_create(
-        imei=imei,
+        imei=customer.imei_1,   
         defaults={
             "customer": customer,
             "user": balance_key.admin_user,
@@ -157,18 +137,11 @@ def register_device(request):
         }
     )
 
-    # Mark key used
     balance_key.is_used = True
     balance_key.used_by = customer
-    balance_key.used_at = timezone.now()
     balance_key.save()
 
-    return Response({
-        "message": "Device registered successfully",
-        "admin_user": balance_key.admin_user.username,
-        "customer_id": customer.id
-    }, status=201)
-
+    return Response({"message": "Device registered successfully"})
 
 
 
