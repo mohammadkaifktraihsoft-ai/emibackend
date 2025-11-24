@@ -115,9 +115,8 @@ WSGI_APPLICATION = 'emibackend.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        default='postgresql://emibackend_db_user:5IgNGhM3iHdlMh5PSyn8KSfPoovt8WpH@dpg-d3u9tmgdl3ps73evqe4g-a.oregon-postgres.render.com:5432/emibackend_db',
-        conn_max_age=600,
-        ssl_require=True
+        default=os.environ.get("DATABASE_URL"),
+        conn_max_age=600
     )
 }
 
