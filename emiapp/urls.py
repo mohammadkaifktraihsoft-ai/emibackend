@@ -2,6 +2,7 @@ from django.urls import path, include
 from rest_framework import routers
 from . import views_balancekey
 from .views import update_emi_payment
+from .views import update_fcm_token
 from .views import (
     ping,
     SignUpView,
@@ -40,4 +41,5 @@ urlpatterns = [
     path('update-emi/<int:customer_id>/', update_emi_payment, name='update_emi'),
     # ✅ All router-based API endpoints (customers, EMI, payments, etc.)
     path('', include(router.urls)),
+    path('device/update-fcm-token/', update_fcm_token),
 ]

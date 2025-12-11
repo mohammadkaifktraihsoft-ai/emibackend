@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Customer, EMI, Payment, UserProfile, Device, BalanceKey 
+from .models import Customer, EMI, Payment, UserProfile, Device, BalanceKey, FCM
+
 
 
 # ---------------- SIGNUP & LOGIN ----------------
@@ -134,3 +135,9 @@ class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
         fields = "__all__"
+
+# ---------------- FMC SERIALIZER ----------------
+class FCMSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FCM
+        fields = ['imei_1', 'fcm_token']

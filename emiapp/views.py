@@ -7,6 +7,7 @@ from rest_framework.decorators import api_view, permission_classes
 from django.contrib.auth.models import User
 from .models import Customer, EMI, Payment, UserProfile, Device, BalanceKey
 from datetime import timedelta
+from .models import FCM
 from django.utils.timezone import now
 from django.db.models import Q
 from django.utils import timezone
@@ -211,3 +212,23 @@ class EMIViewSet(viewsets.ModelViewSet):
 class PaymentViewSet(viewsets.ModelViewSet):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
+
+# ---------------- FCM TOKEN ----------------
+
+@api_view(['POST'])
+def update_fcm_token(request):
+    imei_1 = request.data.get("imei_1")
+    fcm_token = request.data.get("fcm_token")
+
+    if not imei_1 or not fcm_token:
+        return Response({"error": "imei_1 and fcm_token required"}, status=400)
+
+    device, created = FCM.objects.update_or_create(
+        imei_1=imei_1,
+        defaults={"fcm_token": fcm_token}
+    )
+
+    return Response({
+        "message": "Token updated successfully",
+        "created": created
+    })

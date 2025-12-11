@@ -137,3 +137,15 @@ class Payment(models.Model):
     emi = models.ForeignKey(EMI, on_delete=models.CASCADE, related_name="payments")
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     paid_on = models.DateField(auto_now_add=True)
+
+
+# ========================
+# FMC
+# ========================
+class FCM(models.Model):
+    imei_1 = models.CharField(max_length=255, unique=True)  # IMEI or random ID
+    fcm_token = models.TextField()
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.imei_1
