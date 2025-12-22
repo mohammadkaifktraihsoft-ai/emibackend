@@ -14,7 +14,7 @@ from .views import (
     register_device,
     lock_device,
     unlock_device,
-    
+    PendingEMIViewSet
     
 )
 
@@ -23,7 +23,7 @@ router.register(r'customers', CustomerViewSet)
 router.register(r'emis', EMIViewSet)
 router.register(r'payments', PaymentViewSet)
 router.register(r'user-profile', UserProfileViewSet, basename='user-profile')
-
+router.register(r'pending-emis', PendingEMIViewSet, basename='pending-emis')
 
 
 
@@ -42,4 +42,5 @@ urlpatterns = [
     # ✅ All router-based API endpoints (customers, EMI, payments, etc.)
     path('', include(router.urls)),
     path('device/update-fcm-token/', update_fcm_token),
+    
 ]
