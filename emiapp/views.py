@@ -2,7 +2,7 @@ from django.http import JsonResponse
 from django.utils.timezone import now
 from django.db.models import F, Q
 from django.db import transaction
-from rest_framework import viewsets, generics, permissions, status, serializers
+from rest_framework import viewsets, generics, permissions, status
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.response import Response
@@ -55,6 +55,7 @@ class LoginView(TokenObtainPairView):
 class UserProfileViewSet(viewsets.ModelViewSet):
     serializer_class = UserProfileSerializer
     permission_classes = [IsAuthenticated]
+    queryset = UserProfile.objects.none()  # required for router
 
     def get_queryset(self):
         return UserProfile.objects.filter(user=self.request.user)
@@ -66,6 +67,7 @@ class UserProfileViewSet(viewsets.ModelViewSet):
 class CustomerViewSet(viewsets.ModelViewSet):
     serializer_class = CustomerSerializer
     permission_classes = [IsAuthenticated]
+    queryset = Customer.objects.none()  # required for router
 
     def get_queryset(self):
         if self.request.user.is_staff:
@@ -121,6 +123,7 @@ def update_emi_payment(request, customer_id):
 class PendingEMIViewSet(ReadOnlyModelViewSet):
     serializer_class = EMISerializer
     permission_classes = [IsAuthenticated]
+    queryset = EMI.objects.none()  # required for router
 
     def get_queryset(self):
         user = self.request.user
@@ -235,6 +238,7 @@ def unlock_device(request):
 class BalanceKeyViewSet(viewsets.ModelViewSet):
     serializer_class = BalanceKeySerializer
     permission_classes = [IsAuthenticated]
+    queryset = BalanceKey.objects.none()  # required for router
 
     def get_queryset(self):
         return BalanceKey.objects.filter(admin_user=self.request.user).order_by("-created_at")
@@ -246,6 +250,7 @@ class BalanceKeyViewSet(viewsets.ModelViewSet):
 class EMIViewSet(viewsets.ModelViewSet):
     serializer_class = EMISerializer
     permission_classes = [IsAuthenticated]
+    queryset = EMI.objects.none()  # required for router
 
     def get_queryset(self):
         user = self.request.user
@@ -262,6 +267,7 @@ class EMIViewSet(viewsets.ModelViewSet):
 class PaymentViewSet(viewsets.ModelViewSet):
     serializer_class = PaymentSerializer
     permission_classes = [IsAuthenticated]
+    queryset = Payment.objects.none()  # required for router
 
     def get_queryset(self):
         user = self.request.user
