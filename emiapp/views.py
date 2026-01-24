@@ -186,6 +186,35 @@ def register_device(request):
 
     return Response({"message": "Device registered successfully"}, status=201)
 
+
+# ---------------- GET CUSTOMER DATA (FOR DEVICE) ----------------
+@api_view(["GET"])
+@permission_classes([AllowAny])  # Allow access without JWT
+def get_customer_data(request):
+    imei = request.headers.get("X-IMEI")  # Device sends its IMEI in header
+    if not imei:
+        return Response({"error": "IMEI required"}, status=400)
+
+    try:
+        device = Device.objects.get(imei=imei)
+        customer = device.customer
+    except Device.DoesNotExist:
+        return Response({"error": "Device not registered"}, status=403)
+
+    # Return only the data for this customer
+    return Response({
+        "id": customer.id,
+        "name": customer.name,
+        "mobile": customer.mobile,
+        "email": customer.email,
+        "total_emi_amount": customer.total_emi_amount,
+        "emi_per_month": customer.emi_per_month,
+        "paid_months": customer.paid_months,
+        "remaining_months": customer.remaining_months,
+        "next_payment_date": customer.next_payment_date
+    })
+
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def lock_device(request):
