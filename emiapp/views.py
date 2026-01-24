@@ -189,19 +189,20 @@ def register_device(request):
 
 # ---------------- GET CUSTOMER DATA (FOR DEVICE) ----------------
 @api_view(["GET"])
-@permission_classes([AllowAny])  # Allow access without JWT
-def get_customer_data(request):
-    imei = request.headers.get("X-IMEI")  # Device sends its IMEI in header
+@permission_classes([AllowAny])
+def device_customer_data(request):
+    imei = request.headers.get("X-IMEI")
+
     if not imei:
         return Response({"error": "IMEI required"}, status=400)
 
     try:
-        device = Device.objects.get(imei=imei)
-        customer = device.customer
+        device = Device.objects.select_related("customer").get(imei=imei)
     except Device.DoesNotExist:
         return Response({"error": "Device not registered"}, status=403)
 
-    # Return only the data for this customer
+    customer = device.customer
+
     return Response({
         "id": customer.id,
         "name": customer.name,
@@ -211,8 +212,8 @@ def get_customer_data(request):
         "emi_per_month": customer.emi_per_month,
         "paid_months": customer.paid_months,
         "remaining_months": customer.remaining_months,
-        "next_payment_date": customer.next_payment_date
-    })
+        "next_payment_date": customer.next_payment_date,
+    }, status=200)
 
 
 @api_view(["POST"])

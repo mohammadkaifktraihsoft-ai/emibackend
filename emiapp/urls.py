@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework import routers
 from . import views_balancekey
-from .views import update_emi_payment
+from .views import device_customer_data, update_emi_payment
 from .views import update_fcm_token
 from .views import (
     ping,
@@ -34,6 +34,7 @@ urlpatterns = [
 
     # ✅ Device control APIs (for client app)
     path("device/register/", register_device, name="register-device"),
+    path("device/customer/", device_customer_data),
     path("device/lock/", lock_device, name="lock-device"),
     path("device/unlock/", unlock_device, name="unlock-device"),
     # balance key api
