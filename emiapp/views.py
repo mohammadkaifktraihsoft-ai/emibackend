@@ -8,7 +8,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.viewsets import ReadOnlyModelViewSet
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.throttling import ScopedRateThrottle
 from datetime import timedelta
@@ -148,7 +148,7 @@ class PendingEMIViewSet(ReadOnlyModelViewSet):
 
 # ---------------- DEVICE LOCK/UNLOCK ----------------
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def register_device(request):
     key_value = request.data.get("key")
     imei = request.data.get("imei")
