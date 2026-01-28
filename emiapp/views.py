@@ -312,34 +312,28 @@ class PaymentViewSet(viewsets.ModelViewSet):
 
 # ---------------- FCM TOKEN ----------------
 @api_view(['POST'])
-@permission_classes([AllowAny])
 def update_fcm_token(request):
-    imei = request.headers.get("X-IMEI") or request.data.get("imei_1")
+    imei_1 = request.data.get("imei_1")
     fcm_token = request.data.get("fcm_token")
 
-    if not imei or not fcm_token:
+    if not imei_1 or not fcm_token:
         return Response(
-            {"error": "IMEI and fcm_token required"},
-            status=status.HTTP_400_BAD_REQUEST
+            {"error": "imei_1 and fcm_token required"},
+            status=400
         )
 
-    # ✅ Device MUST be registered
-    try:
-        device = Device.objects.get(imei=imei, is_locked=False)
-    except Device.DoesNotExist:
+    # Check if device is registered
+    if not Customer.objects.filter(imei_1=imei_1).exists():
         return Response(
-            {"error": "Device not registered or locked"},
-            status=status.HTTP_403_FORBIDDEN
+            {"error": "Device not registered"},
+            status=403
         )
 
-    # ✅ Save or update FCM token
     FCM.objects.update_or_create(
-        imei_1=imei,
-        defaults={
-            "fcm_token": fcm_token,
-            "device": device
-        }
+        imei_1=imei_1,
+        defaults={"fcm_token": fcm_token}
     )
 
-    return Response({"message": "FCM token updated"}, status=200)
+    return Response({"message": "FCM token updated"})
+
 
