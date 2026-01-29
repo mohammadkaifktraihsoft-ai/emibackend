@@ -312,28 +312,34 @@ class PaymentViewSet(viewsets.ModelViewSet):
 
 # ---------------- FCM TOKEN ----------------
 @api_view(['POST'])
+@permission_classes([AllowAny])  # Device does not have JWT
 def update_fcm_token(request):
-    imei_1 = request.data.get("imei_1")
+    imei = request.data.get("imei_1")
     fcm_token = request.data.get("fcm_token")
 
-    if not imei_1 or not fcm_token:
+    if not imei or not fcm_token:
         return Response(
             {"error": "imei_1 and fcm_token required"},
             status=400
         )
 
-    # Check if device is registered
-    if not Customer.objects.filter(imei_1=imei_1).exists():
+    try:
+        device = Device.objects.get(imei=imei)
+    except Device.DoesNotExist:
         return Response(
             {"error": "Device not registered"},
             status=403
         )
 
     FCM.objects.update_or_create(
-        imei_1=imei_1,
+        imei_1=imei,
         defaults={"fcm_token": fcm_token}
     )
 
-    return Response({"message": "FCM token updated"})
+    return Response(
+        {"message": "FCM token updated successfully"},
+        status=200
+    )
+
 
 
