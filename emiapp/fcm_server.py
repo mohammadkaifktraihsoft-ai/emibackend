@@ -15,8 +15,7 @@ if not firebase_admin._apps:
 def send_command(token, command):
     try:
         if not token:
-            print("FCM token missing")
-            return None
+            return {"error": "FCM token missing"}
 
         message = messaging.Message(
             data={"command": command},
@@ -25,8 +24,9 @@ def send_command(token, command):
 
         response = messaging.send(message)
         print("FCM sent:", response)
-        return response
+
+        return {"success": response}
 
     except Exception as e:
-        print("FCM error:", e)
-        return None
+        print("FCM ERROR:", str(e))
+        return {"error": str(e)}
