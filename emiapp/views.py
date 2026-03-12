@@ -14,7 +14,7 @@ from rest_framework.throttling import ScopedRateThrottle
 from datetime import timedelta
 from django.contrib.auth.models import User
 from django.utils import timezone
-from .fcm_service import send_command 
+from .fcm_server import send_command 
 import logging
 
 from .models import Customer, EMI, Payment, UserProfile, Device, BalanceKey, FCM
