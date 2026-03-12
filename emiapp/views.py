@@ -14,6 +14,7 @@ from rest_framework.throttling import ScopedRateThrottle
 from datetime import timedelta
 from django.contrib.auth.models import User
 from django.utils import timezone
+from .fcm_service import send_command 
 import logging
 
 from .models import Customer, EMI, Payment, UserProfile, Device, BalanceKey, FCM
@@ -228,15 +229,19 @@ def lock_device(request):
 
     try:
         device = Device.objects.get(imei=imei)
+
         device.is_locked = True
         device.last_action = "locked"
         device.last_updated = timezone.now()
         device.save()
 
-        # Logging
-        logger.info(f"{request.user.username} locked device {imei} at {timezone.now()}")
+        # 🔹 SEND FCM COMMAND
+        send_command(device.fcm_token, "LOCK")
+
+        logger.info(f"{request.user.username} locked device {imei}")
 
         return Response({"message": "Device locked successfully"}, status=200)
+
     except Device.DoesNotExist:
         return Response({"error": "Device not found"}, status=404)
 
@@ -252,15 +257,19 @@ def unlock_device(request):
 
     try:
         device = Device.objects.get(imei=imei)
+
         device.is_locked = False
         device.last_action = "unlocked"
         device.last_updated = timezone.now()
         device.save()
 
-        # Logging
-        logger.info(f"{request.user.username} unlocked device {imei} at {timezone.now()}")
+        # 🔹 Send unlock command to device
+        send_command(device.fcm_token, "UNLOCK")
+
+        logger.info(f"{request.user.username} unlocked device {imei}")
 
         return Response({"message": "Device unlocked successfully"}, status=200)
+
     except Device.DoesNotExist:
         return Response({"error": "Device not found"}, status=404)
 

@@ -24,7 +24,10 @@ router.register(r'emis', EMIViewSet)
 router.register(r'payments', PaymentViewSet)
 router.register(r'user-profile', UserProfileViewSet, basename='user-profile')
 router.register(r'pending-emis', PendingEMIViewSet, basename='pending-emis')
-
+router.register(r'balance-keys', views_balancekey.BalanceKeyViewSet, basename='balance-keys')
+router.register(r'update-emi', views_balancekey.UpdateEMIViewSet, basename='update-emi')
+router.register(r'update-fcm-token', views_balancekey.UpdateFCMTokenViewSet, basename='update-fcm-token')
+    
 
 
 urlpatterns = [
