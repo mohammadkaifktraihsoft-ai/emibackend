@@ -236,8 +236,8 @@ def lock_device(request):
         device.save()
 
         # 🔹 SEND FCM COMMAND
-        if device.fcm_token:
-            send_command(device.fcm_token, "LOCK")
+        # if device.fcm_token:
+        #     send_command(device.fcm_token, "LOCK")
 
         logger.info(f"{request.user.username} locked device {imei}")
 
@@ -265,8 +265,8 @@ def unlock_device(request):
         device.save()
 
         # 🔹 Send unlock command to device
-        if device.fcm_token:
-            send_command(device.fcm_token, "UNLOCK")
+        # if device.fcm_token:
+        #     send_command(device.fcm_token, "UNLOCK")
 
         logger.info(f"{request.user.username} unlocked device {imei}")
 
