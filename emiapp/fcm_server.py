@@ -17,13 +17,23 @@ initialize_firebase()
 
 # --------- FUNCTION TO SEND COMMAND TO DEVICE ----------
 def send_command(token, command):
-    message = messaging.Message(
-        data={"command": command},
-        token=token,
-    )
-    response = messaging.send(message)
-    print("Message sent:", response)
-    return response
+    try:
+        if not token:
+            print("FCM ERROR: Token is empty")
+            return None
+
+        message = messaging.Message(
+            data={"command": command},
+            token=token,
+        )
+
+        response = messaging.send(message)
+        print("FCM Message sent:", response)
+        return response
+
+    except Exception as e:
+        print("FCM ERROR:", str(e))
+        return None
 
 
 # --------- TEST USAGE (OPTIONAL) ----------
