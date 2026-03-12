@@ -16,7 +16,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from .fcm_server import send_command 
 import logging
-
+import traceback
 from .models import Customer, EMI, Payment, UserProfile, Device, BalanceKey, FCM
 from .serializers import (
     CustomerSerializer,
@@ -220,14 +220,14 @@ def device_customer_data(request):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def lock_device(request):
-    if not request.user.is_staff:
-        return Response({"detail": "Admin only"}, status=403)
-
-    imei = request.data.get("imei")
-    if not imei:
-        return Response({"error": "IMEI is required"}, status=400)
-
     try:
+        if not request.user.is_staff:
+            return Response({"detail": "Admin only"}, status=403)
+
+        imei = request.data.get("imei")
+        if not imei:
+            return Response({"error": "IMEI is required"}, status=400)
+
         device = Device.objects.get(imei=imei)
 
         device.is_locked = True
@@ -235,16 +235,22 @@ def lock_device(request):
         device.last_updated = timezone.now()
         device.save()
 
-        # 🔹 SEND FCM COMMAND
-        result = send_command(device.fcm_token, "LOCK")
-        return Response(result)
+        result = None
+        if device.fcm_token:
+            result = send_command(device.fcm_token, "LOCK")
 
-        logger.info(f"{request.user.username} locked device {imei}")
+        return Response({
+            "message": "Device locked",
+            "fcm": result
+        })
 
-        return Response({"message": "Device locked successfully"}, status=200)
+    except Exception as e:
+        print("LOCK ERROR:", str(e))
+        traceback.print_exc()
 
-    except Device.DoesNotExist:
-        return Response({"error": "Device not found"}, status=404)
+        return Response({
+            "error": str(e)
+        }, status=500)
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
