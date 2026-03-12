@@ -17,6 +17,7 @@ from django.utils import timezone
 from .fcm_server import send_command 
 import logging
 import traceback
+from .models import Device, FCM
 from .models import Customer, EMI, Payment, UserProfile, Device, BalanceKey, FCM
 from .serializers import (
     CustomerSerializer,
@@ -270,11 +271,17 @@ def unlock_device(request):
         device.last_updated = timezone.now()
         device.save()
 
-        # 🔹 Send unlock command to device
-        if device.fcm_token:
-            send_command(device.fcm_token, "UNLOCK")
+        # Lookup FCM token from FCM table
+        try:
+            fcm_entry = FCM.objects.get(imei_1=imei)
+            if fcm_entry.fcm_token:
+                result = send_command(fcm_entry.fcm_token, "UNLOCK")
+                logger.info(f"FCM command result: {result}")
+        except FCM.DoesNotExist:
+            logger.warning(f"No FCM token found for device {imei}")
 
-        logger.info(f"{request.user.username} unlocked device {imei}")
+        # Logging
+        logger.info(f"{request.user.username} unlocked device {imei} at {timezone.now()}")
 
         return Response({"message": "Device unlocked successfully"}, status=200)
 
