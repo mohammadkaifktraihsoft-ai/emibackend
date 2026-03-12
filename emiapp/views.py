@@ -220,14 +220,14 @@ def device_customer_data(request):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def lock_device(request):
+    if not request.user.is_staff:
+        return Response({"detail": "Admin only"}, status=403)
+
+    imei = request.data.get("imei")
+    if not imei:
+        return Response({"error": "IMEI is required"}, status=400)
+
     try:
-        if not request.user.is_staff:
-            return Response({"detail": "Admin only"}, status=403)
-
-        imei = request.data.get("imei")
-        if not imei:
-            return Response({"error": "IMEI is required"}, status=400)
-
         device = Device.objects.get(imei=imei)
 
         device.is_locked = True
@@ -235,22 +235,22 @@ def lock_device(request):
         device.last_updated = timezone.now()
         device.save()
 
-        result = None
-        if device.fcm_token:
-            result = send_command(device.fcm_token, "LOCK")
+        # Lookup FCM token from FCM table
+        try:
+            fcm_entry = FCM.objects.get(imei_1=imei)
+            if fcm_entry.fcm_token:
+                result = send_command(fcm_entry.fcm_token, "LOCK")
+                logger.info(f"FCM command result: {result}")
+        except FCM.DoesNotExist:
+            logger.warning(f"No FCM token found for device {imei}")
 
-        return Response({
-            "message": "Device locked",
-            "fcm": result
-        })
+        # Logging
+        logger.info(f"{request.user.username} locked device {imei} at {timezone.now()}")
 
-    except Exception as e:
-        print("LOCK ERROR:", str(e))
-        traceback.print_exc()
+        return Response({"message": "Device locked successfully"}, status=200)
 
-        return Response({
-            "error": str(e)
-        }, status=500)
+    except Device.DoesNotExist:
+        return Response({"error": "Device not found"}, status=404)
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
