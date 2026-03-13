@@ -10,7 +10,7 @@ if not firebase_admin._apps:
     cred = credentials.Certificate(service_account_info)
     firebase_admin.initialize_app(cred)
 
-
+print(firebase_admin.get_app().credential.service_account_email)
 # Function to send command
 def send_command(token, command):
     try:
