@@ -3,6 +3,7 @@ from rest_framework import routers
 from . import views_balancekey
 from .views import device_customer_data, update_emi_payment
 from .views import update_fcm_token
+from .views import get_unlock_code
 from .views import (
     ping,
     SignUpView,
@@ -38,6 +39,7 @@ urlpatterns = [
     path("device/customer/", device_customer_data),
     path("device/lock/", lock_device, name="lock-device"),
     path("device/unlock/", unlock_device, name="unlock-device"),
+    path("device/<str:imei>/unlock-code/", get_unlock_code, name="get-unlock-code"),
     # balance key api
     path("balance-keys/", views_balancekey.BalanceKeyListCreateView.as_view(), name="balance-key-list"),
     path('update-emi/<int:customer_id>/', update_emi_payment, name='update_emi'),

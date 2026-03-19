@@ -18,6 +18,8 @@ from .fcm_server import send_command
 import logging
 import traceback
 from .models import Device, FCM
+from .utils import generate_unlock_code
+from django.shortcuts import get_object_or_404
 from .models import Customer, EMI, Payment, UserProfile, Device, BalanceKey, FCM
 from .serializers import (
     CustomerSerializer,
@@ -217,7 +219,7 @@ def device_customer_data(request):
         "next_payment_date": customer.next_payment_date,
     }, status=200)
 
-
+# ---------------- LOCK DEVICE ----------------
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def lock_device(request):
@@ -231,12 +233,16 @@ def lock_device(request):
     try:
         device = Device.objects.get(imei=imei)
 
+        # 🔒 Lock device
         device.is_locked = True
         device.last_action = "locked"
         device.last_updated = timezone.now()
         device.save()
 
-        # Lookup FCM token from FCM table
+        # 🔑 Generate offline unlock code
+        unlock_code = generate_unlock_code(device.secret, device.imei)
+
+        # 📡 Send FCM lock command
         try:
             fcm_entry = FCM.objects.get(imei_1=imei)
             if fcm_entry.fcm_token:
@@ -245,14 +251,18 @@ def lock_device(request):
         except FCM.DoesNotExist:
             logger.warning(f"No FCM token found for device {imei}")
 
-        # Logging
+        # 📝 Logging
         logger.info(f"{request.user.username} locked device {imei} at {timezone.now()}")
 
-        return Response({"message": "Device locked successfully"}, status=200)
+        return Response({
+            "message": "Device locked successfully",
+            "imei": imei,
+            "unlock_code": unlock_code
+        }, status=200)
 
     except Device.DoesNotExist:
         return Response({"error": "Device not found"}, status=404)
-
+# ---------------- UNLOCK DEVICE ----------------
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def unlock_device(request):
@@ -367,3 +377,23 @@ def update_fcm_token(request):
 
 
 
+#---------------- UTILS ----------------
+
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_unlock_code(request, imei):
+    device = get_object_or_404(Device, imei=imei, user=request.user)
+
+    if not device.is_locked:
+        return Response({"error": "Device is not locked"}, status=400)
+
+    code = generate_unlock_code(device.secret, device.imei)
+
+    return Response({
+        "device": str(device),
+        "imei": device.imei,
+        "unlock_code": code,
+        "valid_for_seconds": 30
+    })

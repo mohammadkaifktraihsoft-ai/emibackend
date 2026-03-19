@@ -67,10 +67,19 @@ class Device(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="devices")
     customer = models.ForeignKey("Customer", on_delete=models.SET_NULL, null=True, blank=True, related_name="device")
     imei = models.CharField(max_length=50, unique=True)
+
+    # 🔐 NEW FIELD
+    secret = models.CharField(max_length=64, editable=False, blank=True)
+
     is_locked = models.BooleanField(default=False)
     registered_at = models.DateTimeField(auto_now_add=True)
-    last_action = models.CharField(max_length=20, blank=True, null=True)  # "locked" / "unlocked" / "registered"
+    last_action = models.CharField(max_length=20, blank=True, null=True)
     last_updated = models.DateTimeField(default=timezone.now)
+
+    def save(self, *args, **kwargs):
+        if not self.secret:
+            self.secret = uuid.uuid4().hex  # generate unique secret
+        super().save(*args, **kwargs)
 
     def __str__(self):
         status = "🔒 Locked" if self.is_locked else "🔓 Unlocked"
