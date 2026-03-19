@@ -387,12 +387,12 @@ def update_fcm_token(request):
 def get_unlock_code(request, imei):
     device = get_object_or_404(Device, imei=imei)
 
-    # generate new code
-    code = generate_code()
-    device.unlock_code = code
-    device.save()
+    # ✅ Only generate if no code exists
+    if not device.unlock_code:
+        device.unlock_code = generate_code()
+        device.save()
 
     return Response({
         "imei": device.imei,
-        "unlock_code": code
+        "unlock_code": device.unlock_code
     })
