@@ -18,7 +18,7 @@ from .fcm_server import send_command
 import logging
 import traceback
 from .models import Device, FCM
-from .utils import generate_unlock_code
+from .utils import generate_code
 from django.shortcuts import get_object_or_404
 from .models import Customer, EMI, Payment, UserProfile, Device, BalanceKey, FCM
 from .serializers import (
@@ -384,24 +384,14 @@ def update_fcm_token(request):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def get_unlock_code(request, imei):
-    try:
-        device = Device.objects.get(imei=imei)
+    device = get_object_or_404(Device, imei=imei)
 
-        # ✅ Ensure secret always exists
-        if not device.secret:
-            import uuid
-            device.secret = uuid.uuid4().hex
-            device.save()
+    # generate new code
+    code = generate_code()
+    device.unlock_code = code
+    device.save()
 
-        code = generate_unlock_code(device.secret, device.imei)
-
-        return Response({
-            "imei": device.imei,
-            "unlock_code": code
-        })
-
-    except Device.DoesNotExist:
-        return Response({"error": "Device not found"}, status=404)
-
-    except Exception as e:
-        return Response({"error": str(e)}, status=500)
+    return Response({
+        "imei": device.imei,
+        "unlock_code": code
+    })
