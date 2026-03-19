@@ -382,7 +382,7 @@ def update_fcm_token(request):
 
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def get_unlock_code(request, imei):
     device = get_object_or_404(Device, imei=imei, user=request.user)
 
