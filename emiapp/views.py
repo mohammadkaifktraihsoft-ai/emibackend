@@ -384,16 +384,24 @@ def update_fcm_token(request):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def get_unlock_code(request, imei):
-    device = get_object_or_404(Device, imei=imei, user=request.user)
+    try:
+        device = Device.objects.get(imei=imei)
 
-    if not device.is_locked:
-        return Response({"error": "Device is not locked"}, status=400)
+        # ✅ Ensure secret always exists
+        if not device.secret:
+            import uuid
+            device.secret = uuid.uuid4().hex
+            device.save()
 
-    code = generate_unlock_code(device.secret, device.imei)
+        code = generate_unlock_code(device.secret, device.imei)
 
-    return Response({
-        "device": str(device),
-        "imei": device.imei,
-        "unlock_code": code,
-        "valid_for_seconds": 30
-    })
+        return Response({
+            "imei": device.imei,
+            "unlock_code": code
+        })
+
+    except Device.DoesNotExist:
+        return Response({"error": "Device not found"}, status=404)
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)

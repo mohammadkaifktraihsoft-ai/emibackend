@@ -1,17 +1,23 @@
 import hmac
 import hashlib
-import time
-
-TIME_STEP = 30  # seconds
-CODE_LENGTH = 6  # change to 8 if needed
-
+from datetime import datetime
 
 def generate_unlock_code(secret, imei):
-    timestep = int(time.time() / TIME_STEP)
+    try:
+        # ensure string
+        secret = str(secret)
+        imei = str(imei)
 
-    message = f"{imei}{timestep}".encode()
-    key = secret.encode()
+        # fixed date format
+        date_str = datetime.utcnow().strftime("%Y-%m-%d")
 
-    h = hmac.new(key, message, hashlib.sha256).hexdigest()
+        message = (imei + date_str).encode()
+        key = secret.encode()
 
-    return str(int(h, 16))[-CODE_LENGTH:]
+        h = hmac.new(key, message, hashlib.sha256).hexdigest()
+
+        return h[-6:]  # last 6 digits
+
+    except Exception as e:
+        print("Unlock code error:", str(e))
+        return "000000"  # fallback (never crash)
