@@ -240,7 +240,8 @@ def lock_device(request):
         device.save()
 
         # 🔑 Generate offline unlock code
-        unlock_code = generate_unlock_code(device.secret, device.imei)
+        unlock_code = generate_code()
+        device.unlock_code = unlock_code
 
         # 📡 Send FCM lock command
         try:
