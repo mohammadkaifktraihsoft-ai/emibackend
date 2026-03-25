@@ -217,6 +217,7 @@ def device_customer_data(request):
         "paid_months": customer.paid_months,
         "remaining_months": customer.remaining_months,
         "next_payment_date": customer.next_payment_date,
+        "dealer_contact": customer.dealer_contact,
     }, status=200)
 
 # ---------------- LOCK DEVICE ----------------
