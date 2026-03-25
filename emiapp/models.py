@@ -54,6 +54,7 @@ class Customer(models.Model):
     paid_months = models.IntegerField(default=0)
     remaining_months = models.IntegerField(null=True, blank=True)    
     next_payment_date = models.DateField(null=True, blank=True)
+    dealer_contact = models.CharField(max_length=20, blank=True, null=True)
 
 
     def __str__(self):

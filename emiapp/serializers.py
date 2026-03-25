@@ -127,6 +127,7 @@ class CustomerSerializer(serializers.ModelSerializer):
             'paid_months',
             'remaining_months',
             'next_payment_date',
+            'dealer_contact',
         ]
         read_only_fields = ["id", "created_at"]
 
