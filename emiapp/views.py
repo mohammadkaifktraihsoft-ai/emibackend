@@ -237,12 +237,13 @@ def lock_device(request):
         device.is_locked = True
         device.last_action = "locked"
         device.last_updated = timezone.now()
-        device.save()
+        
 
         # 🔑 Generate offline unlock code
         unlock_code = generate_code()
         device.unlock_code = unlock_code
 
+        device.save()
         # 📡 Send FCM lock command
         try:
             fcm_entry = FCM.objects.get(imei_1=imei)
@@ -386,11 +387,6 @@ def update_fcm_token(request):
 @permission_classes([AllowAny])
 def get_unlock_code(request, imei):
     device = get_object_or_404(Device, imei=imei)
-
-    # ✅ Only generate if no code exists
-    if not device.unlock_code:
-        device.unlock_code = generate_code()
-        device.save()
 
     return Response({
         "imei": device.imei,
