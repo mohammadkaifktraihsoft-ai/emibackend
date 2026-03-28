@@ -71,10 +71,10 @@ class UserProfileViewSet(viewsets.ModelViewSet):
 class CustomerViewSet(viewsets.ModelViewSet):
     serializer_class = CustomerSerializer
     permission_classes = [IsAuthenticated]
-    queryset = Customer.objects.none()  # required for router
+    queryset = Customer.objects.none()
 
-    def get_queryset(self):
-    return Customer.objects.filter(user=self.request.user).order_by("-created_at")
+    def get_queryset(self):   # ✅ inside function
+        return Customer.objects.filter(user=self.request.user).order_by("-created_at")
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
