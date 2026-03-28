@@ -74,9 +74,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
     queryset = Customer.objects.none()  # required for router
 
     def get_queryset(self):
-        if self.request.user.is_staff:
-            return Customer.objects.all().order_by("-created_at")
-        return Customer.objects.filter(user=self.request.user).order_by("-created_at")
+    return Customer.objects.filter(user=self.request.user).order_by("-created_at")
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
