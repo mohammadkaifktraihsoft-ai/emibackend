@@ -91,7 +91,7 @@ def update_emi_payment(request, customer_id):
     try:
         with transaction.atomic():
             # Lock customer row
-            customer = Customer.objects.select_for_update().get(id=customer_id)
+            customer = Customer.objects.select_for_update().get(id=customer_id, user=request.user)
             if customer.paid_months >= (customer.total_months or 0):
                 return Response({"message": "All EMI already paid"}, status=400)
 
@@ -232,7 +232,7 @@ def lock_device(request):
         return Response({"error": "IMEI is required"}, status=400)
 
     try:
-        device = Device.objects.get(imei=imei)
+        device = Device.objects.get(imei=imei,user=request.user)
 
         # 🔒 Lock device
         device.is_locked = True
@@ -277,7 +277,7 @@ def unlock_device(request):
         return Response({"error": "IMEI is required"}, status=400)
 
     try:
-        device = Device.objects.get(imei=imei)
+        device = Device.objects.get(imei=imei,user=request.user)
 
         device.is_locked = False
         device.last_action = "unlocked"
