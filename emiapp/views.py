@@ -170,6 +170,9 @@ def register_device(request):
     except BalanceKey.DoesNotExist:
         return Response({"error": "Invalid or used key"}, status=400)
 
+    if not balance_key.admin_user:
+        return Response({"error": "Balance key missing admin user"}, status=400)
+
     device, created = Device.objects.update_or_create(
         imei=imei,
         defaults={
