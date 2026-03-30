@@ -55,13 +55,17 @@ class BalanceKeyAdmin(admin.ModelAdmin):
         return str(obj.key)[:12] + '...'
     key_short.short_description = 'Key'
     
-    def has_delete_permission(self, request):
+    def has_delete_permission(self, request, obj=None):
         # Only superusers can delete balance keys
         return request.user.is_superuser
-    
+
     def has_change_permission(self, request, obj=None):
         # Only superusers can edit balance keys
         return request.user.is_superuser
+
+    def has_add_permission(self, request):
+        # Allow custom user assignment by superuser only, staff can also create if desired
+        return request.user.is_superuser or request.user.is_staff
     
     def get_queryset(self, request):
         # Superusers see all keys, staff see only their own
