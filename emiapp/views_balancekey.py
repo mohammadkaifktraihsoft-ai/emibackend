@@ -9,7 +9,7 @@ class BalanceKeyListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         # Show only keys for the logged-in admin
-        return BalanceKey.objects.filter(admin_user=self.request.user)
+        return BalanceKey.objects.filter(admin_user=self.request.user,is_used=False)
 
     def perform_create(self, serializer):
         # Auto-assign key to logged-in admin

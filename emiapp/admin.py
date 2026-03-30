@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import UserProfile, Customer, EMI, Payment
+from .models import UserProfile, Customer, EMI, Payment, BalanceKey, Device
 
 
 class UserProfileInline(admin.StackedInline):
@@ -27,3 +27,49 @@ admin.site.register(User, CustomUserAdmin)
 admin.site.register(Customer)
 admin.site.register(EMI)
 admin.site.register(Payment)
+
+
+# ========================
+# BALANCE KEY ADMIN
+# ========================
+class BalanceKeyAdmin(admin.ModelAdmin):
+    list_display = ('key_short', 'admin_user', 'is_used', 'used_by', 'created_at', 'used_at')
+    list_filter = ('is_used', 'admin_user', 'created_at')
+    search_fields = ('key', 'admin_user__username', 'used_by__name')
+    readonly_fields = ('key', 'is_used', 'used_by', 'used_at', 'qr_image', 'created_at')
+    
+    fieldsets = (
+        ('Key Information', {
+            'fields': ('key', 'qr_image')
+        }),
+        ('Admin Assignment', {
+            'fields': ('admin_user',)
+        }),
+        ('Usage Tracking', {
+            'fields': ('is_used', 'used_by', 'created_at', 'used_at'),
+            'description': 'These fields are automatically updated when the key is used.'
+        }),
+    )
+    
+    def key_short(self, obj):
+        return str(obj.key)[:12] + '...'
+    key_short.short_description = 'Key'
+    
+    def has_delete_permission(self, request):
+        # Only superusers can delete balance keys
+        return request.user.is_superuser
+    
+    def has_change_permission(self, request, obj=None):
+        # Only superusers can edit balance keys
+        return request.user.is_superuser
+    
+    def get_queryset(self, request):
+        # Superusers see all keys, staff see only their own
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(admin_user=request.user)
+
+
+admin.site.register(BalanceKey, BalanceKeyAdmin)
+admin.site.register(Device)
