@@ -381,12 +381,13 @@ def update_fcm_token(request):
     )
 
 #---------------- TUTORIAL ----------------
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-class TutorialListView(generics.ListAPIView):
-    queryset = Tutorial.objects.all()
-    serializer_class = TutorialSerializer
 
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def TutorialListView(request):
+    tutorials = Tutorial.objects.all()
+    serializer = TutorialSerializer(tutorials, many=True)
+    return Response(serializer.data)
 #---------------- UTILS ----------------
 
 
