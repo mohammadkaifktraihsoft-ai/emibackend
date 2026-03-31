@@ -133,6 +133,17 @@ class EMI(models.Model):
         return f"EMI for {self.customer.name}"
 
 
+
+#=========================
+#  Tutorial video
+#=========================
+class Tutorial(models.Model):
+    title = models.CharField(max_length=255)
+    youtube_url = models.URLField()
+
+    def __str__(self):
+        return self.title
+
 # =========================
 # PAYMENT
 # =========================
@@ -152,3 +163,4 @@ class FCM(models.Model):
 
     def __str__(self):
         return self.imei_1
+

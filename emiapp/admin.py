@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import UserProfile, Customer, EMI, Payment, BalanceKey, Device
+from .models import UserProfile, Customer, EMI, Payment, BalanceKey, Device, Tutorial
 
 
 class UserProfileInline(admin.StackedInline):
@@ -77,3 +77,8 @@ class BalanceKeyAdmin(admin.ModelAdmin):
 
 admin.site.register(BalanceKey, BalanceKeyAdmin)
 admin.site.register(Device)
+
+# ==========video tutorial===============
+@admin.register(Tutorial)
+class TutorialAdmin(admin.ModelAdmin):
+    list_display = ("title", "youtube_url")

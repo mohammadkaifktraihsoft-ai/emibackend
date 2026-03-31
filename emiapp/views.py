@@ -30,7 +30,8 @@ from .serializers import (
     DeviceSerializer,
     BalanceKeySerializer,
 )
-
+from .models import Tutorial
+from .serializers import TutorialSerializer
 logger = logging.getLogger(__name__)
 
 # ---------------- PING TEST ----------------
@@ -379,8 +380,12 @@ def update_fcm_token(request):
         status=200
     )
 
+#---------------- TUTORIAL ----------------
 
-
+class TutorialListView(generics.ListAPIView):
+    queryset = Tutorial.objects.all()
+    serializer_class = TutorialSerializer
+    
 #---------------- UTILS ----------------
 
 

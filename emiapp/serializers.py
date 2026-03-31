@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Customer, EMI, Payment, UserProfile, Device, BalanceKey, FCM
+from .models import Customer, EMI, Payment, UserProfile, Device, BalanceKey, FCM , Tutorial
 
 
 
@@ -130,6 +130,13 @@ class CustomerSerializer(serializers.ModelSerializer):
             'dealer_contact',
         ]
         read_only_fields = ["id", "created_at"]
+
+# ---------------- TUTORIAL SERIALIZER ----------------
+class TutorialSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tutorial
+        fields = ["id", "title", "youtube_url"]
+
 
 # ---------------- PAYMENT SERIALIZER ----------------
 class PaymentSerializer(serializers.ModelSerializer):

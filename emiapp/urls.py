@@ -15,7 +15,8 @@ from .views import (
     register_device,
     lock_device,
     unlock_device,
-    PendingEMIViewSet
+    PendingEMIViewSet,
+    TutorialListView
     
 )
 
@@ -46,5 +47,6 @@ urlpatterns = [
     # ✅ All router-based API endpoints (customers, EMI, payments, etc.)
     path('', include(router.urls)),
     path('device/update-fcm-token/', update_fcm_token),
+    path("tutorials/", TutorialListView.as_view()),
     
 ]
