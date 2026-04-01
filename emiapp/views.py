@@ -223,6 +223,7 @@ def device_customer_data(request):
         "remaining_months": customer.remaining_months,
         "next_payment_date": customer.next_payment_date,
         "dealer_contact": customer.dealer_contact,
+        "paid_down_payment": customer.paid_down_payment,
     }, status=200)
 
 # ---------------- LOCK DEVICE ----------------
