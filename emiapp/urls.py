@@ -16,7 +16,9 @@ from .views import (
     lock_device,
     unlock_device,
     PendingEMIViewSet,
-    TutorialListView
+    TutorialListView,
+    MDMQRCodeView,
+    MDMConfigCreateView,
     
 )
 
@@ -48,5 +50,8 @@ urlpatterns = [
     path('', include(router.urls)),
     path('device/update-fcm-token/', update_fcm_token),
     path("tutorials/", TutorialListView),
+    # MDM APIs
+    path("mdm/qr/", MDMQRCodeView.as_view()),
+    path("mdm/config/", MDMConfigCreateView.as_view()),
     
 ]

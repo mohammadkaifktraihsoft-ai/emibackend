@@ -144,6 +144,20 @@ class Tutorial(models.Model):
     def __str__(self):
         return self.title
 
+#=========================
+#MDM QR Code
+#=========================
+class MDMConfig(models.Model):
+    name = models.CharField(max_length=100, default="default")
+    apk_url = models.URLField()
+    checksum = models.CharField(max_length=128, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+
+
 # =========================
 # PAYMENT
 # =========================

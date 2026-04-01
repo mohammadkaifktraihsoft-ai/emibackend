@@ -17,6 +17,7 @@ from django.utils import timezone
 from .fcm_server import send_command 
 import logging
 import traceback
+from rest_framework.views import APIView
 from .models import Device, FCM
 from .utils import generate_code
 from django.shortcuts import get_object_or_404
@@ -29,7 +30,9 @@ from .serializers import (
     UserProfileSerializer,
     DeviceSerializer,
     BalanceKeySerializer,
+    MDMConfigSerializer,
 )
+from .models import MDMConfig
 from .models import Tutorial
 from .serializers import TutorialSerializer
 logger = logging.getLogger(__name__)
@@ -401,3 +404,33 @@ def get_unlock_code(request, imei):
         "imei": device.imei,
         "unlock_code": device.unlock_code
     })
+
+
+#---------------- MDM CONFIG ----------------
+class MDMQRCodeView(APIView):
+    def get(self, request):
+        config = MDMConfig.objects.order_by("-updated_at").first()
+
+        if not config:
+            return Response(
+                {"error": "No MDM config found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        qr_data = {
+            "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME":
+                "com.example.inlock/.MyAdminReceiver",
+
+            "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_DOWNLOAD_LOCATION":
+                config.apk_url,
+
+            "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_CHECKSUM":
+                config.checksum,
+        }
+
+        return Response(qr_data)
+
+
+class MDMConfigCreateView(generics.CreateAPIView):
+    queryset = MDMConfig.objects.all()
+    serializer_class = MDMConfigSerializer

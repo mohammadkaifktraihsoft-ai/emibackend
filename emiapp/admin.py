@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import UserProfile, Customer, EMI, Payment, BalanceKey, Device, Tutorial
+from .models import UserProfile, Customer, EMI, Payment, BalanceKey, Device, Tutorial, MDMConfig
 
 
 class UserProfileInline(admin.StackedInline):
@@ -82,3 +82,10 @@ admin.site.register(Device)
 @admin.register(Tutorial)
 class TutorialAdmin(admin.ModelAdmin):
     list_display = ("title", "youtube_url")
+
+# ==========MDM Config===============
+@admin.register(MDMConfig)
+class MDMConfigAdmin(admin.ModelAdmin):
+    list_display = ("id", "apk_url", "checksum", "updated_at")
+    search_fields = ("apk_url", "checksum")
+    readonly_fields = ("checksum", "updated_at")
