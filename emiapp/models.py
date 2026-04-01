@@ -9,6 +9,7 @@ from io import BytesIO
 from django.core.files.base import ContentFile
 import hashlib
 import requests
+import base64
 # =========================
 # USER PROFILE
 # =========================
@@ -177,7 +178,7 @@ class MDMConfig(models.Model):
                     if chunk:
                         sha256.update(chunk)
 
-                self.checksum = sha256.hexdigest()
+                self.checksum = base64.b64encode(sha256.digest()).decode()
 
                 # ✅ Save only checksum (no loop)
                 super().save(update_fields=["checksum"])
