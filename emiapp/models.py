@@ -154,19 +154,22 @@ class MDMConfig(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
-        try:
-            if self.apk_url:
-                sha256 = hashlib.sha256()
+        # ✅ First save (fast, no blocking)
+        super().save(*args, **kwargs)
 
-                headers = {
-                    "User-Agent": "Mozilla/5.0"
-                }
+        # ✅ Then generate checksum if not exists
+        if self.apk_url and not self.checksum:
+            try:
+                import hashlib
+                import requests
+
+                sha256 = hashlib.sha256()
 
                 response = requests.get(
                     self.apk_url,
                     stream=True,
-                    headers=headers,
-                    timeout=20
+                    headers={"User-Agent": "Mozilla/5.0"},
+                    timeout=30
                 )
                 response.raise_for_status()
 
@@ -176,12 +179,11 @@ class MDMConfig(models.Model):
 
                 self.checksum = sha256.hexdigest()
 
-        except Exception as e:
-            print("❌ Checksum error:", e)
-            # IMPORTANT: don't crash save
-            self.checksum = ""
+                # ✅ Save only checksum (no loop)
+                super().save(update_fields=["checksum"])
 
-        super().save(*args, **kwargs)
+            except Exception as e:
+                print("❌ Checksum error:", e)
 
     def __str__(self):
         return self.apk_url
