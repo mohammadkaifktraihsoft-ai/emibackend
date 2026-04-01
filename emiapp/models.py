@@ -7,7 +7,8 @@ import uuid
 import qrcode
 from io import BytesIO
 from django.core.files.base import ContentFile
-
+import hashlib
+import requests
 # =========================
 # USER PROFILE
 # =========================
