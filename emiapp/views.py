@@ -408,6 +408,10 @@ def get_unlock_code(request, imei):
 
 
 #---------------- MDM CONFIG ----------------
+
+# ✅ Your signature (static)
+SIGNATURE_CHECKSUM = "GnDbEURqB/QhkQPF0jGX8bon+qMbxYdfKDcCAAxRKpo="
+
 class MDMQRCodeView(APIView):
     def get(self, request):
         config = MDMConfig.objects.order_by("-updated_at").first()
@@ -427,6 +431,10 @@ class MDMQRCodeView(APIView):
 
             "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_CHECKSUM":
                 config.checksum,
+
+            # 🔥 ADD THIS (VERY IMPORTANT)
+            "android.app.extra.PROVISIONING_DEVICE_ADMIN_SIGNATURE_CHECKSUM":
+                SIGNATURE_CHECKSUM,
         }
 
         return Response(qr_data)
