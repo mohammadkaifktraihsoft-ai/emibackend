@@ -410,6 +410,8 @@ def get_unlock_code(request, imei):
 #---------------- MDM CONFIG ----------------
 
 class MDMQRCodeView(APIView):
+    permission_classes = [IsAuthenticated]  # ✅ enough for JWT
+
     def get(self, request):
         config = MDMConfig.objects.order_by("-updated_at").first()
 
@@ -420,17 +422,17 @@ class MDMQRCodeView(APIView):
             )
 
         try:
-            # ✅ Convert stored text → JSON
             qr_data = json.loads(config.enrollment_data)
-        except Exception as e:
+        except Exception:
             return Response(
                 {"error": "Invalid JSON in admin"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         return Response(qr_data)
-        
+
 
 class MDMConfigCreateView(generics.CreateAPIView):
+    permission_classes = [permissions.IsAdminUser]  # ✅ only admin can create
     queryset = MDMConfig.objects.all()
     serializer_class = MDMConfigSerializer
