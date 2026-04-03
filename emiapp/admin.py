@@ -86,6 +86,6 @@ class TutorialAdmin(admin.ModelAdmin):
 # ==========MDM Config===============
 @admin.register(MDMConfig)
 class MDMConfigAdmin(admin.ModelAdmin):
-    list_display = ("id", "apk_url", "checksum", "updated_at")
-    search_fields = ("apk_url", "checksum")
-    readonly_fields = ("checksum", "updated_at")
+    list_display = ("id", "updated_at")
+    search_fields = ("enrollment_data",)
+    readonly_fields = ("updated_at",)

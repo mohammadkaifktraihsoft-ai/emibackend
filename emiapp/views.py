@@ -409,9 +409,6 @@ def get_unlock_code(request, imei):
 
 #---------------- MDM CONFIG ----------------
 
-# ✅ Your signature (static)
-SIGNATURE_CHECKSUM = "GnDbEURqB/QhkQPF0jGX8bon+qMbxYdfKDcCAAxRKpo="
-
 class MDMQRCodeView(APIView):
     def get(self, request):
         config = MDMConfig.objects.order_by("-updated_at").first()
@@ -422,23 +419,17 @@ class MDMQRCodeView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        qr_data = {
-            "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME":
-                "com.example.inlock/.MyAdminReceiver",
-
-            "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_DOWNLOAD_LOCATION":
-                config.apk_url,
-
-            "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_CHECKSUM":
-                config.checksum,
-
-            # 🔥 ADD THIS (VERY IMPORTANT)
-            "android.app.extra.PROVISIONING_DEVICE_ADMIN_SIGNATURE_CHECKSUM":
-                SIGNATURE_CHECKSUM,
-        }
+        try:
+            # ✅ Convert stored text → JSON
+            qr_data = json.loads(config.enrollment_data)
+        except Exception as e:
+            return Response(
+                {"error": "Invalid JSON in admin"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         return Response(qr_data)
-
+        
 
 class MDMConfigCreateView(generics.CreateAPIView):
     queryset = MDMConfig.objects.all()

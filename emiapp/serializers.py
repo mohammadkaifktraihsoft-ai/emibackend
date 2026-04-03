@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Customer, EMI, Payment, UserProfile, Device, BalanceKey, FCM , Tutorial, MDMConfig
-from .QRutils import generate_checksum_from_url
+
 
 
 # ---------------- SIGNUP & LOGIN ----------------
@@ -155,14 +155,4 @@ class FCMSerializer(serializers.ModelSerializer):
 class MDMConfigSerializer(serializers.ModelSerializer):
     class Meta:
         model = MDMConfig
-        fields = "__all__"
-
-    def create(self, validated_data):
-        apk_url = validated_data.get("apk_url")
-
-        # 🔥 Generate checksum automatically
-        checksum = generate_checksum_from_url(apk_url)
-
-        validated_data["checksum"] = checksum
-
-        return super().create(validated_data)
+        fields = ["enrollment_data"]

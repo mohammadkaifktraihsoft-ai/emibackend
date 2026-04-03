@@ -150,44 +150,11 @@ class Tutorial(models.Model):
 #MDM QR Code
 #=========================
 class MDMConfig(models.Model):
-    apk_url = models.URLField()
-    checksum = models.CharField(max_length=128, blank=True)
+    enrollment_data = models.TextField()  # 🔥 paste full JSON here
     updated_at = models.DateTimeField(auto_now=True)
 
-    def save(self, *args, **kwargs):
-        # ✅ First save (fast, no blocking)
-        super().save(*args, **kwargs)
-
-        # ✅ Then generate checksum if not exists
-        if self.apk_url and not self.checksum:
-            try:
-                import hashlib
-                import requests
-
-                sha256 = hashlib.sha256()
-
-                response = requests.get(
-                    self.apk_url,
-                    stream=True,
-                    headers={"User-Agent": "Mozilla/5.0"},
-                    timeout=30
-                )
-                response.raise_for_status()
-
-                for chunk in response.iter_content(8192):
-                    if chunk:
-                        sha256.update(chunk)
-
-                self.checksum = base64.b64encode(sha256.digest()).decode()
-
-                # ✅ Save only checksum (no loop)
-                super().save(update_fields=["checksum"])
-
-            except Exception as e:
-                print("❌ Checksum error:", e)
-
     def __str__(self):
-        return self.apk_url
+        return "MDM QR Config"
 
 
 
