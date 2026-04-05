@@ -155,4 +155,4 @@ class FCMSerializer(serializers.ModelSerializer):
 class MDMConfigSerializer(serializers.ModelSerializer):
     class Meta:
         model = MDMConfig
-        fields = ["enrollment_data"]
+        fields = ["qr_image"]  # ✅ correct field

@@ -35,6 +35,8 @@ from .serializers import (
 from .models import MDMConfig
 from .models import Tutorial
 from .serializers import TutorialSerializer
+from .permissions import IsDeviceAuthenticated
+import uuid
 logger = logging.getLogger(__name__)
 
 # ---------------- PING TEST ----------------
@@ -156,27 +158,41 @@ class PendingEMIViewSet(ReadOnlyModelViewSet):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def register_device(request):
-    key_value = request.data.get("key")
-    imei = request.data.get("imei")
+    key_value = request.data.get("key", "").strip()
+    imei = request.data.get("imei", "").strip()
 
+    # ✅ Validate inputs
     if not key_value:
         return Response({"error": "Balance key is required"}, status=400)
+
     if not imei or len(imei) not in (15, 16) or not imei.isdigit():
         return Response({"error": "Valid IMEI required"}, status=400)
 
+    # ✅ Validate UUID format (VERY IMPORTANT)
+    try:
+        uuid.UUID(key_value)
+    except ValueError:
+        return Response({"error": "Invalid balance key format"}, status=400)
+
+    # ✅ Get customer
     try:
         customer = Customer.objects.get(Q(imei_1=imei) | Q(imei_2=imei))
     except Customer.DoesNotExist:
         return Response({"error": "Customer not found"}, status=404)
 
-    try:
-        balance_key = BalanceKey.objects.get(key=key_value, is_used=False)
-    except BalanceKey.DoesNotExist:
-        return Response({"error": "Invalid or used key"}, status=400)
+    # ✅ Safe query (no crash)
+    balance_key = BalanceKey.objects.filter(key=key_value).first()
+
+    if not balance_key:
+        return Response({"error": "Balance key not found"}, status=400)
+
+    if balance_key.is_used:
+        return Response({"error": "Balance key already used"}, status=400)
 
     if not balance_key.admin_user:
-        return Response({"error": "Balance key missing admin user"}, status=400)
+        return Response({"error": "Balance key missing admin"}, status=400)
 
+    # ✅ Register device
     device, created = Device.objects.update_or_create(
         imei=imei,
         defaults={
@@ -188,29 +204,32 @@ def register_device(request):
         }
     )
 
+    if not device.device_token:
+        device.device_token = uuid.uuid4()
+        device.save(update_fields=["device_token"])
+
+    # ✅ Mark key used
     balance_key.is_used = True
     balance_key.used_by = customer
     balance_key.used_at = timezone.now()
     balance_key.save()
 
-    return Response({"message": "Device registered successfully"}, status=201)
+    return Response({
+        "message": "Device registered successfully",
+        "device_token": str(device.device_token)
+    }, status=201)
 
 
 # ---------------- GET CUSTOMER DATA (FOR DEVICE) ----------------
 @api_view(["GET"])
-@permission_classes([AllowAny])
+@permission_classes([IsDeviceAuthenticated])
 def device_customer_data(request):
-    imei = request.headers.get("X-IMEI")
-
-    if not imei:
-        return Response({"error": "IMEI required"}, status=400)
-
-    try:
-        device = Device.objects.select_related("customer").get(imei=imei)
-    except Device.DoesNotExist:
-        return Response({"error": "Device not registered"}, status=403)
+    device = request.device  # ✅ use authenticated device
 
     customer = device.customer
+
+    if not customer:
+        return Response({"error": "No customer linked"}, status=404)
 
     return Response({
         "id": customer.id,
@@ -224,7 +243,7 @@ def device_customer_data(request):
         "next_payment_date": customer.next_payment_date,
         "dealer_contact": customer.dealer_contact,
         "paid_down_payment": customer.paid_down_payment,
-    }, status=200)
+    })
 
 # ---------------- LOCK DEVICE ----------------
 @api_view(["POST"])
@@ -354,35 +373,22 @@ class PaymentViewSet(viewsets.ModelViewSet):
         return Payment.objects.filter(emi__customer=device.customer)
 
 # ---------------- FCM TOKEN ----------------
-@api_view(['POST'])
-@permission_classes([AllowAny])  # Device does not have JWT
+@api_view(["POST"])
+@permission_classes([IsDeviceAuthenticated])
 def update_fcm_token(request):
-    imei = request.data.get("imei_1")
+    device = request.device
+
     fcm_token = request.data.get("fcm_token")
 
-    if not imei or not fcm_token:
-        return Response(
-            {"error": "imei_1 and fcm_token required"},
-            status=400
-        )
-
-    try:
-        device = Device.objects.get(imei=imei)
-    except Device.DoesNotExist:
-        return Response(
-            {"error": "Device not registered"},
-            status=403
-        )
+    if not fcm_token:
+        return Response({"error": "fcm_token required"}, status=400)
 
     FCM.objects.update_or_create(
-        imei_1=imei,
+        imei_1=device.imei,
         defaults={"fcm_token": fcm_token}
     )
 
-    return Response(
-        {"message": "FCM token updated successfully"},
-        status=200
-    )
+    return Response({"message": "FCM token updated"})
 
 #---------------- TUTORIAL ----------------
 
@@ -397,39 +403,35 @@ def TutorialListView(request):
 
 
 @api_view(["GET"])
-@permission_classes([AllowAny])
+@permission_classes([IsDeviceAuthenticated])
 def get_unlock_code(request, imei):
-    device = get_object_or_404(Device, imei=imei)
+    device = request.device  # from permission
+
+    # 🔒 Ensure device matches IMEI
+    if device.imei != imei:
+        return Response({"error": "Unauthorized device"}, status=403)
 
     return Response({
-        "imei": device.imei,
-        "unlock_code": device.unlock_code
+    "imei": device.imei,
+    "unlock_code": device.unlock_code
     })
+    
 
 
 #---------------- MDM CONFIG ----------------
-
 class MDMQRCodeView(APIView):
-    permission_classes = [IsAuthenticated]  # ✅ enough for JWT
-
     def get(self, request):
         config = MDMConfig.objects.order_by("-updated_at").first()
 
-        if not config:
+        if not config or not config.qr_image:
             return Response(
-                {"error": "No MDM config found"},
+                {"error": "No QR image found"},
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        try:
-            qr_data = json.loads(config.enrollment_data)
-        except Exception:
-            return Response(
-                {"error": "Invalid JSON in admin"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        return Response(qr_data)
+        return Response({
+            "qr_image": request.build_absolute_uri(config.qr_image.url)
+        })
 
 
 class MDMConfigCreateView(generics.CreateAPIView):

@@ -4,6 +4,8 @@ from . import views_balancekey
 from .views import device_customer_data, update_emi_payment
 from .views import update_fcm_token
 from .views import get_unlock_code
+from django.conf import settings
+from django.conf.urls.static import static
 from .views import (
     ping,
     SignUpView,
@@ -53,5 +55,8 @@ urlpatterns = [
     # MDM APIs
     path("mdm/qr/", MDMQRCodeView.as_view()),
     path("mdm/config/", MDMConfigCreateView.as_view()),
+  
     
 ]
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

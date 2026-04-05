@@ -58,6 +58,8 @@ class Customer(models.Model):
     next_payment_date = models.DateField(null=True, blank=True)
     dealer_contact = models.CharField(max_length=20, blank=True, null=True)
     paid_down_payment = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    device_token = models.UUIDField(null=True, blank=True, unique=True)
+
 
     def __str__(self):
         return self.name
@@ -150,11 +152,11 @@ class Tutorial(models.Model):
 #MDM QR Code
 #=========================
 class MDMConfig(models.Model):
-    enrollment_data = models.TextField()  # 🔥 paste full JSON here
+    qr_image = models.ImageField(upload_to="mdm_qr/", null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return "MDM QR Config"
+        return "MDM QR Image"
 
 
 
