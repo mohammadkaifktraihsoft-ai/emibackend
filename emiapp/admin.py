@@ -76,7 +76,7 @@ class BalanceKeyAdmin(admin.ModelAdmin):
 
 
 admin.site.register(BalanceKey, BalanceKeyAdmin)
-admin.site.register(Device)
+
 
 # ==========video tutorial===============
 @admin.register(Tutorial)
