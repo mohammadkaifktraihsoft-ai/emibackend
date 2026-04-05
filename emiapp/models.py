@@ -79,10 +79,9 @@ class Device(models.Model):
     last_updated = models.DateTimeField(default=timezone.now)
     device_token = models.UUIDField(
     default=uuid.uuid4,
-    unique=True,
     editable=False,
-    null=False,
-    blank=False
+    null=True,
+    blank=True
 )
 
 
