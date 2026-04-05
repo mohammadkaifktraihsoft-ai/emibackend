@@ -58,7 +58,7 @@ class Customer(models.Model):
     next_payment_date = models.DateField(null=True, blank=True)
     dealer_contact = models.CharField(max_length=20, blank=True, null=True)
     paid_down_payment = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    device_token = models.UUIDField(null=True, blank=True, unique=True)
+    
 
 
     def __str__(self):
@@ -77,6 +77,13 @@ class Device(models.Model):
     registered_at = models.DateTimeField(auto_now_add=True)
     last_action = models.CharField(max_length=20, blank=True, null=True)
     last_updated = models.DateTimeField(default=timezone.now)
+    device_token = models.UUIDField(
+    default=uuid.uuid4,
+    unique=True,
+    editable=False,
+    null=False,
+    blank=False
+)
 
 
     def __str__(self):
