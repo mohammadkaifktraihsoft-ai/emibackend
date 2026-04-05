@@ -80,9 +80,11 @@ class Device(models.Model):
     device_token = models.UUIDField(
     default=uuid.uuid4,
     editable=False,
-    null=True,
-    blank=True
+    unique=True,
+    null=False,
+    blank=False
 )
+
 
 
     def __str__(self):
