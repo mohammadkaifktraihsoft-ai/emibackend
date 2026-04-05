@@ -73,6 +73,7 @@ class DeviceSerializer(serializers.ModelSerializer):
             "imei",
             "is_locked",
             "registered_at",
+            "device_token",
         ]
         read_only_fields = ["id", "registered_at", "user_name", "customer_name"]
 
