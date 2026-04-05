@@ -80,8 +80,7 @@ class Device(models.Model):
     device_token = models.UUIDField(
         default=uuid.uuid4,
         editable=False,
-        null=False,
-        unique=True  # make sure all existing tokens are unique before migrating
+        null=False  
     )
 
 
