@@ -98,3 +98,17 @@ class MDMConfigAdmin(admin.ModelAdmin):
         return "No Image"
 
     preview.short_description = "QR Preview"
+
+
+@admin.register(Device)
+class DeviceAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "imei",
+        "customer",
+        "is_locked",
+        "device_token",   # ✅ ADD THIS
+        "last_updated"
+    )
+
+    readonly_fields = ("device_token",) 
