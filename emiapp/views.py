@@ -422,7 +422,7 @@ def get_unlock_code(request, imei):
 @permission_classes([IsAuthenticated])  # ✅ Admin JWT auth
 def admin_get_unlock_code(request, imei):
     try:
-        device = Device.objects.get(imei=imei)
+        device = Device.objects.get(imei=imei,user=request.user)
 
         # Optional safety checks
         if not device.is_locked:
