@@ -46,7 +46,7 @@ urlpatterns = [
     path("device/lock/", lock_device, name="lock-device"),
     path("device/unlock/", unlock_device, name="unlock-device"),
     path("device/<str:imei>/unlock-code/", get_unlock_code, name="get-unlock-code"),
-    path("api/v1/admin/device/<str:imei>/unlock-code/", admin_get_unlock_code),
+    path("admin/device/<str:imei>/unlock-code/", admin_get_unlock_code),
     # balance key api
     path("balance-keys/", views_balancekey.BalanceKeyListCreateView.as_view(), name="balance-key-list"),
     path('update-emi/<int:customer_id>/', update_emi_payment, name='update_emi'),
