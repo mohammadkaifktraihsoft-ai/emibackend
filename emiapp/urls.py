@@ -6,6 +6,7 @@ from .views import update_fcm_token
 from .views import get_unlock_code
 from django.conf import settings
 from django.conf.urls.static import static
+from .views import admin_get_unlock_code
 from .views import (
     ping,
     SignUpView,
@@ -45,6 +46,7 @@ urlpatterns = [
     path("device/lock/", lock_device, name="lock-device"),
     path("device/unlock/", unlock_device, name="unlock-device"),
     path("device/<str:imei>/unlock-code/", get_unlock_code, name="get-unlock-code"),
+    path("api/v1/admin/device/<str:imei>/unlock-code/", admin_get_unlock_code),
     # balance key api
     path("balance-keys/", views_balancekey.BalanceKeyListCreateView.as_view(), name="balance-key-list"),
     path('update-emi/<int:customer_id>/', update_emi_payment, name='update_emi'),

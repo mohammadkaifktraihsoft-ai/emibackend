@@ -417,6 +417,27 @@ def get_unlock_code(request, imei):
     })
     
 
+#---------------- ADMIN GET UNLOCK CODE ----------------
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])  # ✅ Admin JWT auth
+def admin_get_unlock_code(request, imei):
+    try:
+        device = Device.objects.get(imei=imei)
+
+        # Optional safety checks
+        if not device.is_locked:
+            return Response({"error": "Device is not locked"}, status=400)
+
+        if not device.unlock_code:
+            return Response({"error": "No unlock code available"}, status=404)
+
+        return Response({
+            "imei": device.imei,
+            "unlock_code": device.unlock_code
+        })
+
+    except Device.DoesNotExist:
+        return Response({"error": "Device not found"}, status=404)
 
 #---------------- MDM CONFIG ----------------
 class MDMQRCodeView(APIView):
