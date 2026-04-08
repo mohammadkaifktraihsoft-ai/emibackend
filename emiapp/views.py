@@ -36,11 +36,12 @@ from .models import MDMConfig
 from .models import Tutorial
 from .serializers import TutorialSerializer
 from .permissions import IsDeviceAuthenticated
+from rest_framework.generics import ListAPIView
 import uuid
 logger = logging.getLogger(__name__)
 from .models import Policy
 from .serializers import PolicySerializer
-from .dualpermission import IsAdminOrDeviceAuthenticated
+
 # ---------------- PING TEST ----------------
 def ping(request):
     return JsonResponse({"message": "pong"})
@@ -465,11 +466,26 @@ class MDMConfigCreateView(generics.CreateAPIView):
 
 
 #---------------- POLICY LIST ----------------
-class PolicyListView(APIView):
-    permission_classes = [IsAdminOrDeviceAuthenticated]
+class PolicyUpdateView(APIView):
+    permission_classes = [IsAuthenticated]  # ✅ only admin
 
-    def get(self, request):
-        policies = Policy.objects.all()  # ✅ GLOBAL
+    def post(self, request):
+        policy_type = request.data.get("type")
+        content = request.data.get("content")
 
-        serializer = PolicySerializer(policies, many=True)
-        return Response(serializer.data)
+        policy, created = Policy.objects.update_or_create(
+            type=policy_type,
+            defaults={"content": content}
+        )
+
+        return Response({
+            "message": "Policy updated",
+            "type": policy.type
+        })
+
+
+
+class PolicyListView(ListAPIView):
+    queryset = Policy.objects.all()
+    serializer_class = PolicySerializer
+    permission_classes = [AllowAny]  # ✅ public access
