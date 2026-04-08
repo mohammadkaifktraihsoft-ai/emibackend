@@ -202,3 +202,14 @@ class Policy(models.Model):
 
     def __str__(self):
         return self.type
+
+
+# =========================service request=================
+class ServiceRequest(models.Model):
+    name = models.CharField(max_length=100)
+    mobile = models.CharField(max_length=15)
+    issue = models.TextField(max_length=500)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} - {self.mobile}"

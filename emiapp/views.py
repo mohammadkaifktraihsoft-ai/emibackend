@@ -41,7 +41,8 @@ import uuid
 logger = logging.getLogger(__name__)
 from .models import Policy
 from .serializers import PolicySerializer
-
+from .models import ServiceRequest
+from .serializers import ServiceRequestSerializer
 # ---------------- PING TEST ----------------
 def ping(request):
     return JsonResponse({"message": "pong"})
@@ -489,3 +490,13 @@ class PolicyListView(ListAPIView):
     queryset = Policy.objects.all()
     serializer_class = PolicySerializer
     permission_classes = [AllowAny]  # ✅ public access
+
+
+#---------------- SERVICE REQUEST CREATE (for future use) ----------------
+class ServiceRequestCreateView(generics.CreateAPIView):
+    queryset = ServiceRequest.objects.all()
+    serializer_class = ServiceRequestSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save()

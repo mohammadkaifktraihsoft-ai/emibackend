@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Customer, EMI, Payment, UserProfile, Device, BalanceKey, FCM , Tutorial, MDMConfig , Policy
-
+from .models import Customer, EMI, Payment, UserProfile, Device, BalanceKey, FCM , Tutorial, MDMConfig , Policy, ServiceRequest
 
 
 # ---------------- SIGNUP & LOGIN ----------------
@@ -163,3 +162,15 @@ class PolicySerializer(serializers.ModelSerializer):
     class Meta:
         model = Policy
         fields = ["type", "content", "updated_at"]
+
+
+# ---------------- SERVICE REQUEST SERIALIZER (for future use) ----------------
+class ServiceRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ServiceRequest
+        fields = "__all__"
+
+    def validate_mobile(self, value):
+        if len(value) < 10:
+            raise serializers.ValidationError("Enter valid mobile number")
+        return value

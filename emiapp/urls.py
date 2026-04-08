@@ -23,7 +23,9 @@ from .views import (
     MDMQRCodeView,
     MDMConfigCreateView,
     PolicyListView,
-    PolicyUpdateView
+    PolicyUpdateView,
+    ServiceRequestCreateView
+
 )
 
 router = routers.DefaultRouter()
@@ -60,6 +62,7 @@ urlpatterns = [
     path("mdm/config/", MDMConfigCreateView.as_view()),
     path("policies/", PolicyListView.as_view(), name="policies"),
     path("admin/policies/", PolicyUpdateView.as_view()),
+    path("service-requests/", ServiceRequestCreateView.as_view(), name="service-request"),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
