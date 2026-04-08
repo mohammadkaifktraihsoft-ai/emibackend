@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import UserProfile, Customer, EMI, Payment, BalanceKey, Device, Tutorial, MDMConfig
+from .models import UserProfile, Customer, EMI, Payment, BalanceKey, Device, Tutorial, MDMConfig, Policy
 
 
 class UserProfileInline(admin.StackedInline):
@@ -112,3 +112,8 @@ class DeviceAdmin(admin.ModelAdmin):
     )
 
     readonly_fields = ("device_token",) 
+
+# =========================POLICY ADMIN=========================
+@admin.register(Policy)
+class PolicyAdmin(admin.ModelAdmin):
+    list_display = ("type", "updated_at")

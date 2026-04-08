@@ -187,3 +187,18 @@ class FCM(models.Model):
     def __str__(self):
         return self.imei_1
 
+# =========================policy=================
+class Policy(models.Model):
+    type = models.CharField(
+        max_length=20,
+        choices=[
+            ("terms and conditions", "Terms and Conditions"),
+            ("privacy policy", "Privacy Policy"),
+        ],
+        unique=True
+    )
+    content = models.TextField()
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.type

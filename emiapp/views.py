@@ -38,7 +38,9 @@ from .serializers import TutorialSerializer
 from .permissions import IsDeviceAuthenticated
 import uuid
 logger = logging.getLogger(__name__)
-
+from .models import Policy
+from .serializers import PolicySerializer
+from .dualpermission import IsAdminOrDeviceAuthenticated
 # ---------------- PING TEST ----------------
 def ping(request):
     return JsonResponse({"message": "pong"})
@@ -455,7 +457,19 @@ class MDMQRCodeView(APIView):
         })
 
 
+#---------------- MDM CONFIG CREATE (ADMIN ONLY) ----------------
 class MDMConfigCreateView(generics.CreateAPIView):
     permission_classes = [permissions.IsAdminUser]  # ✅ only admin can create
     queryset = MDMConfig.objects.all()
     serializer_class = MDMConfigSerializer
+
+
+#---------------- POLICY LIST ----------------
+class PolicyListView(APIView):
+    permission_classes = [IsAdminOrDeviceAuthenticated]
+
+    def get(self, request):
+        policies = Policy.objects.all()  # ✅ GLOBAL
+
+        serializer = PolicySerializer(policies, many=True)
+        return Response(serializer.data)

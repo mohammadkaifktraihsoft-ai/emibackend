@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Customer, EMI, Payment, UserProfile, Device, BalanceKey, FCM , Tutorial, MDMConfig
+from .models import Customer, EMI, Payment, UserProfile, Device, BalanceKey, FCM , Tutorial, MDMConfig , Policy
 
 
 
@@ -157,3 +157,9 @@ class MDMConfigSerializer(serializers.ModelSerializer):
     class Meta:
         model = MDMConfig
         fields = ["qr_image"]  # ✅ correct field
+
+# ---------------- POLICY SERIALIZER ----------------
+class PolicySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Policy
+        fields = ["type", "content", "updated_at"]
