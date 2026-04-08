@@ -207,7 +207,7 @@ class Policy(models.Model):
 # =========================service request=================
 class ServiceRequest(models.Model):
     name = models.CharField(max_length=100)
-    mobile = models.CharField(max_length=15)
+    email = models.EmailField()
     issue = models.TextField(max_length=500)
     created_at = models.DateTimeField(auto_now_add=True)
 

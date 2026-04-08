@@ -121,5 +121,5 @@ class PolicyAdmin(admin.ModelAdmin):
 # =========================SERVICE REQUEST ADMIN=========================
 @admin.register(ServiceRequest)
 class ServiceRequestAdmin(admin.ModelAdmin):
-    list_display = ("name", "mobile", "created_at")
-    search_fields = ("name", "mobile")
+    list_display = ("name", "email", "created_at")
+    search_fields = ("name", "email")

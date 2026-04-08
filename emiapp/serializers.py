@@ -170,7 +170,7 @@ class ServiceRequestSerializer(serializers.ModelSerializer):
         model = ServiceRequest
         fields = "__all__"
 
-    def validate_mobile(self, value):
-        if len(value) < 10:
-            raise serializers.ValidationError("Enter valid mobile number")
+    def validate_email(self, value):
+        if "@" not in value:
+            raise serializers.ValidationError("Enter valid email")
         return value
