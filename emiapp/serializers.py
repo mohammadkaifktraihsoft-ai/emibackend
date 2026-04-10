@@ -155,7 +155,7 @@ class FCMSerializer(serializers.ModelSerializer):
 class MDMConfigSerializer(serializers.ModelSerializer):
     class Meta:
         model = MDMConfig
-        fields = ["qr_image"]  # ✅ correct field
+        fields = ["id", "name", "qr_data", "updated_at"]
 
 # ---------------- POLICY SERIALIZER ----------------
 class PolicySerializer(serializers.ModelSerializer):

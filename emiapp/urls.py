@@ -7,6 +7,7 @@ from .views import get_unlock_code
 from django.conf import settings
 from django.conf.urls.static import static
 from .views import admin_get_unlock_code
+from .views import MDMQRView
 from .views import (
     ping,
     SignUpView,
@@ -20,7 +21,7 @@ from .views import (
     unlock_device,
     PendingEMIViewSet,
     TutorialListView,
-    MDMQRCodeView,
+    MDMQRView,
     MDMConfigCreateView,
     PolicyListView,
     PolicyUpdateView,
@@ -58,8 +59,7 @@ urlpatterns = [
     path('device/update-fcm-token/', update_fcm_token),
     path("tutorials/", TutorialListView),
     # MDM APIs
-    path("mdm/qr/", MDMQRCodeView.as_view()),
-    path("mdm/config/", MDMConfigCreateView.as_view()),
+    path("mdm/qr/", MDMQRView.as_view()),
     path("policies/", PolicyListView.as_view(), name="policies"),
     path("admin/policies/", PolicyUpdateView.as_view()),
     path("service-requests/", ServiceRequestCreateView.as_view(), name="service-request"),

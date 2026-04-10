@@ -33,6 +33,7 @@ from .serializers import (
     MDMConfigSerializer,
 )
 from .models import MDMConfig
+
 from .models import Tutorial
 from .serializers import TutorialSerializer
 from .permissions import IsDeviceAuthenticated
@@ -43,6 +44,7 @@ from .models import Policy
 from .serializers import PolicySerializer
 from .models import ServiceRequest
 from .serializers import ServiceRequestSerializer
+from .serializers import MDMConfigSerializer
 # ---------------- PING TEST ----------------
 def ping(request):
     return JsonResponse({"message": "pong"})
@@ -444,19 +446,18 @@ def admin_get_unlock_code(request, imei):
         return Response({"error": "Device not found"}, status=404)
 
 #---------------- MDM CONFIG ----------------
-class MDMQRCodeView(APIView):
+class MDMQRView(APIView):
+    permission_classes = [IsAuthenticated]   # 🔒 require login
+
     def get(self, request):
-        config = MDMConfig.objects.order_by("-updated_at").first()
+        config = MDMConfig.objects.first()
 
-        if not config or not config.qr_image:
-            return Response(
-                {"error": "No QR image found"},
-                status=status.HTTP_404_NOT_FOUND
-            )
+        if not config:
+            return Response({"error": "No config found"}, status=404)
 
-        return Response({
-            "qr_image": request.build_absolute_uri(config.qr_image.url)
-        })
+        serializer = MDMConfigSerializer(config)
+
+        return Response(serializer.data)
 
 
 #---------------- MDM CONFIG CREATE (ADMIN ONLY) ----------------

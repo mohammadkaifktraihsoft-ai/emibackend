@@ -159,11 +159,12 @@ class Tutorial(models.Model):
 #MDM QR Code
 #=========================
 class MDMConfig(models.Model):
-    qr_image = models.ImageField(upload_to="mdm_qr/", null=True, blank=True)
+    name = models.CharField(max_length=100, default="Default Config")
+    qr_data = models.JSONField()  # store full QR data
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return "MDM QR Image"
+        return self.name
 
 
 

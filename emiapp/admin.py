@@ -86,18 +86,10 @@ class TutorialAdmin(admin.ModelAdmin):
 # ==========MDM Config===============
 @admin.register(MDMConfig)
 class MDMConfigAdmin(admin.ModelAdmin):
-    list_display = ("id", "preview", "updated_at")
-    readonly_fields = ("updated_at", "preview")
+    list_display = ("id", "name", "updated_at")
+    readonly_fields = ("updated_at",)
 
-    # 👇 ADD THIS
-    fields = ("qr_image", "preview", "updated_at")
-
-    def preview(self, obj):
-        if obj.qr_image:
-            return format_html('<img src="{}" width="120" />', obj.qr_image.url)
-        return "No Image"
-
-    preview.short_description = "QR Preview"
+    fields = ("name", "qr_data", "updated_at")
 
 
 @admin.register(Device)
