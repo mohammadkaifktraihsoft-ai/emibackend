@@ -25,7 +25,8 @@ from .views import (
     MDMConfigCreateView,
     PolicyListView,
     PolicyUpdateView,
-    ServiceRequestCreateView
+    ServiceRequestCreateView,
+    LatestAppVersionView,
 
 )
 
@@ -63,6 +64,7 @@ urlpatterns = [
     path("policies/", PolicyListView.as_view(), name="policies"),
     path("admin/policies/", PolicyUpdateView.as_view()),
     path("service-requests/", ServiceRequestCreateView.as_view(), name="service-request"),
+     path("app/version/", LatestAppVersionView.as_view(), name="app-version"),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

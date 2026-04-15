@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Customer, EMI, Payment, UserProfile, Device, BalanceKey, FCM , Tutorial, MDMConfig , Policy, ServiceRequest
-
+from .models import AppVersion
 
 # ---------------- SIGNUP & LOGIN ----------------
 class SignUpSerializer(serializers.ModelSerializer):
@@ -174,3 +174,19 @@ class ServiceRequestSerializer(serializers.ModelSerializer):
         if "@" not in value:
             raise serializers.ValidationError("Enter valid email")
         return value
+
+
+# ---------------- APP VERSION SERIALIZER ----------------
+
+class AppVersionSerializer(serializers.ModelSerializer):
+    apk_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AppVersion
+        fields = "__all__"   # ✅ FIXED
+
+    def get_apk_url(self, obj):
+        request = self.context.get("request")
+        if obj.apk_file:
+            return request.build_absolute_uri(obj.apk_file.url)
+        return None

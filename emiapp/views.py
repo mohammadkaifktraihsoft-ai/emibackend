@@ -45,6 +45,9 @@ from .serializers import PolicySerializer
 from .models import ServiceRequest
 from .serializers import ServiceRequestSerializer
 from .serializers import MDMConfigSerializer
+
+from .models import AppVersion
+from .serializers import AppVersionSerializer
 # ---------------- PING TEST ----------------
 def ping(request):
     return JsonResponse({"message": "pong"})
@@ -501,3 +504,17 @@ class ServiceRequestCreateView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save()
+
+
+
+#---------------- LATEST APP VERSION ----------------
+
+class LatestAppVersionView(APIView):
+    def get(self, request):
+        latest = AppVersion.objects.order_by("-version_code").first()
+
+        if not latest:
+            return Response({"message": "No version found"}, status=404)
+
+        serializer = AppVersionSerializer(latest, context={"request": request})
+        return Response(serializer.data)

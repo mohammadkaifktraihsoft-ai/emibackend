@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .models import UserProfile, Customer, EMI, Payment, BalanceKey, Device, Tutorial, MDMConfig, Policy, ServiceRequest
-
+from .models import AppVersion
 
 class UserProfileInline(admin.StackedInline):
     model = UserProfile
@@ -115,3 +115,9 @@ class PolicyAdmin(admin.ModelAdmin):
 class ServiceRequestAdmin(admin.ModelAdmin):
     list_display = ("name", "email", "created_at")
     search_fields = ("name", "email")
+
+# =========================APP VERSION ADMIN=========================
+@admin.register(AppVersion)
+class AppVersionAdmin(admin.ModelAdmin):
+    list_display = ("version_name", "version_code", "force_update", "updated_at")
+    readonly_fields = ("updated_at",)

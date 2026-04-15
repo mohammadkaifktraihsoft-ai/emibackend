@@ -214,3 +214,15 @@ class ServiceRequest(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.email}"
+
+# =========================app version=================
+class AppVersion(models.Model):
+    version_name = models.CharField(max_length=20)   # e.g. "1.0.1"
+    version_code = models.IntegerField()             # e.g. 2
+    apk_url = models.URLField()# upload APK
+    force_update = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.version_name
