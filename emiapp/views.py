@@ -516,5 +516,5 @@ class LatestAppVersionView(APIView):
         if not latest:
             return Response({"message": "No version found"}, status=404)
 
-        serializer = AppVersionSerializer(latest, context={"request": request})
+        serializer = AppVersionSerializer(latest)
         return Response(serializer.data)

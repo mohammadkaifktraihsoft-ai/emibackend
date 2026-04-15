@@ -179,14 +179,6 @@ class ServiceRequestSerializer(serializers.ModelSerializer):
 # ---------------- APP VERSION SERIALIZER ----------------
 
 class AppVersionSerializer(serializers.ModelSerializer):
-    apk_url = serializers.SerializerMethodField()
-
     class Meta:
         model = AppVersion
-        fields = "__all__"   # ✅ FIXED
-
-    def get_apk_url(self, obj):
-        request = self.context.get("request")
-        if obj.apk_file:
-            return request.build_absolute_uri(obj.apk_file.url)
-        return None
+        fields = "__all__"
