@@ -510,6 +510,8 @@ class ServiceRequestCreateView(generics.CreateAPIView):
 #---------------- LATEST APP VERSION ----------------
 
 class LatestAppVersionView(APIView):
+        permission_classes = [IsAuthenticated]
+        
     def get(self, request):
         latest = AppVersion.objects.order_by("-version_code").first()
 
