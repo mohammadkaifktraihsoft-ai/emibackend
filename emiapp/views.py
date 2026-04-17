@@ -167,36 +167,26 @@ class PendingEMIViewSet(ReadOnlyModelViewSet):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def register_device(request):
-    key_value = request.data.get("key", "").strip()
     imei = request.data.get("imei", "").strip()
 
-    # ✅ Validate inputs
-    if not key_value:
-        return Response({"error": "Balance key is required"}, status=400)
-
+    # ✅ Validate IMEI
     if not imei or len(imei) not in (15, 16) or not imei.isdigit():
         return Response({"error": "Valid IMEI required"}, status=400)
 
-    # ✅ Validate UUID format (VERY IMPORTANT)
-    try:
-        uuid.UUID(key_value)
-    except ValueError:
-        return Response({"error": "Invalid balance key format"}, status=400)
-
-    # ✅ Get customer
+    # ✅ Get customer using IMEI
     try:
         customer = Customer.objects.get(Q(imei_1=imei) | Q(imei_2=imei))
     except Customer.DoesNotExist:
         return Response({"error": "Customer not found"}, status=404)
 
-    # ✅ Safe query (no crash)
-    balance_key = BalanceKey.objects.filter(key=key_value).first()
+    # 🔥 AUTO: Get unused balance key for this customer's admin
+    balance_key = BalanceKey.objects.filter(
+        admin_user=customer.user,   # or correct field if different
+        is_used=False
+    ).first()
 
     if not balance_key:
-        return Response({"error": "Balance key not found"}, status=400)
-
-    if balance_key.is_used:
-        return Response({"error": "Balance key already used"}, status=400)
+        return Response({"error": "No available balance key"}, status=400)
 
     if not balance_key.admin_user:
         return Response({"error": "Balance key missing admin"}, status=400)
@@ -213,21 +203,21 @@ def register_device(request):
         }
     )
 
+    # ✅ Generate device token if not exists
     if not device.device_token:
         device.device_token = uuid.uuid4()
         device.save(update_fields=["device_token"])
 
-    # ✅ Mark key used
+    # ✅ Mark key used automatically
     balance_key.is_used = True
     balance_key.used_by = customer
     balance_key.used_at = timezone.now()
     balance_key.save()
 
     return Response({
-        "message": "Device registered successfully",
+        "message": "Device auto-registered successfully",
         "device_token": str(device.device_token)
     }, status=201)
-
 
 # ---------------- GET CUSTOMER DATA (FOR DEVICE) ----------------
 @api_view(["GET"])

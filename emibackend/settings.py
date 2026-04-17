@@ -47,10 +47,12 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'emiapp',
+    "axes",
 ]
 
 
 MIDDLEWARE = [
+    'axes.middleware.AxesMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -177,3 +179,17 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
 }
+
+AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
+
+from datetime import timedelta
+
+AXES_FAILURE_LIMIT = 5                         # max 5 attempts
+AXES_COOLOFF_TIME = timedelta(minutes=15)      # lock for 15 minutes
+
+AXES_RESET_ON_SUCCESS = True                   # reset after successful login
+AXES_LOCKOUT_BY_COMBINATION_USER_AND_IP = True # more accurate blocking
+AXES_ONLY_ADMIN_SITE = True
